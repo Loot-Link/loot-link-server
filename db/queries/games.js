@@ -16,7 +16,7 @@ export async function getGamesForImageURL(){
   const sql = `
     SELECT *
     FROM games
-    WHERE cover_image_url IS NULL
+
   `;
   const { rows: games } = await db.query(sql);
   return games;
