@@ -5,7 +5,8 @@ export default router;
 import { createUser, getUserByEmailAndPassword, getUsers } from "#db/queries/users";
 import requireBody from "#middleware/requireBody";
 import { createToken } from "#utils/jwt";
-
+import { getUserById } from "#db/queries/users";
+import getUserFromToken from "#middleware/getUserFromToken";
 
 router.get("/",  async (req, res) => {
   const users = await getUsers();
@@ -19,6 +20,7 @@ router.get("/",  async (req, res) => {
   res.send(result);
   // console.log("REQ.USER:", req.user);
 });
+
 
 
 router.post(
@@ -74,3 +76,14 @@ router.post(
 );
 
 
+
+//Get ME - my user info
+router.use(getUserFromToken);
+router.use((req, res, next) => {
+  if (!req.user) return res.status(401).send("Unauthorized");
+  next();
+});
+router.get("/me", async (req, res) => {
+  const user = await getUserById(req.user.id);
+  res.send(req.user);
+});

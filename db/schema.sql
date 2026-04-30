@@ -19,6 +19,7 @@ CREATE TABLE users (
   password TEXT NOT NULL,
   username TEXT UNIQUE,  
   notes TEXT,  
+  steam_id TEXT UNIQUE,
   active BOOLEAN NOT NULL DEFAULT TRUE,
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW(),

@@ -9,6 +9,8 @@ import cors from "cors";
 import usersRouter from "#api/users";
 import gamesRouter from "#api/games";
 import sessionsRouter from "#api/sessions";
+import steamRouter from "#api/steam";
+import connectionsRouter from "./api/connections.js";
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -16,10 +18,12 @@ app.use(morgan("dev"));
 app.use(cors());
 app.use(getUserFromToken); 
 
-app.use("/users", usersRouter);
-app.use("/games", gamesRouter);
+app.use("/api/users", usersRouter);
 app.use("/api/games", gamesRouter);
-app.use("/sessions", sessionsRouter);
+app.use("/api/sessions", sessionsRouter);
+
+app.use("/api/steam", steamRouter);
+app.use("/api/connections", connectionsRouter);
 
 
 app.use((err, req, res, next) => {
