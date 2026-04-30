@@ -1,3 +1,10 @@
+
+npm run db:reset
+npm install -g nodemon
+Now it auto-restarts whenever you save a file
+
+4/29/2026 - testing first upload after branch
+
 Loot Link - EMJ
 
 Loot Link is a social gaming platform designed to bring your recent play sessions, achievements, and gaming connections into one place. Instead of jumping between platforms, it gives you a centralized hub to track what you’ve been playing, who you’ve been playing with, and what you’ve accomplished. The goal is simple: make your gaming activity feel connected, visible, and a little more meaningful.

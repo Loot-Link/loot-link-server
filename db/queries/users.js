@@ -62,3 +62,16 @@ export async function getUserById(id) {
   } = await db.query(sql, [id]);
   return user;
 }
+
+
+export async function updateUserSteamId(userId, steamId) {
+  const sql = `
+    UPDATE users
+    SET steam_id = $2
+    WHERE user_id = $1
+    RETURNING *;
+  `;
+
+  const { rows: [user] } = await db.query(sql, [userId, steamId]);
+  return user;
+}
