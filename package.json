@@ -21,7 +21,8 @@
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.1",
     "node-fetch": "^3.3.2",
-    "pg": "^8.20.0"
+    "pg": "^8.20.0",
+    "psn-api": "^2.18.0"
   },
   "devDependencies": {
     "supertest": "^7.1.0",

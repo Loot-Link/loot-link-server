@@ -1,44 +1,32 @@
 import db from "#db/client";
 import bcrypt from "bcrypt";
 
-
 export async function getUsers() {
   const sql = `
-  SELECT *
-  FROM users
+    SELECT * FROM users
   `;
   const { rows: users } = await db.query(sql);
   return users;
 }
 
-
-
 export async function createUser(email, username, password, role_id = 100) {
   username = username.toLowerCase();
-
   const sql = `
-  INSERT INTO users
-    (email, username, password, role_id)
-  VALUES
-    ($1, $2, $3, $4)
-  RETURNING *
-  `;  
-
+    INSERT INTO users (email, username, password, role_id)
+    VALUES ($1, $2, $3, $4)
+    RETURNING *
+  `;
   const hashedPassword = await bcrypt.hash(password, 10);
   const {
     rows: [user],
   } = await db.query(sql, [email, username, hashedPassword, role_id]);
-
   return user;
 }
 
-
-
 export async function getUserByEmailAndPassword(email, password) {
   const sql = `
-  SELECT *
-  FROM users
-  WHERE email = $1
+    SELECT * FROM users
+    WHERE email = $1
   `;
   const {
     rows: [user],
@@ -53,16 +41,14 @@ export async function getUserByEmailAndPassword(email, password) {
 
 export async function getUserById(id) {
   const sql = `
-  SELECT *
-  FROM users
-  WHERE user_id = $1
+    SELECT * FROM users
+    WHERE user_id = $1
   `;
   const {
     rows: [user],
   } = await db.query(sql, [id]);
   return user;
 }
-
 
 export async function updateUserSteamId(userId, steamId) {
   const sql = `
@@ -71,7 +57,22 @@ export async function updateUserSteamId(userId, steamId) {
     WHERE user_id = $1
     RETURNING *;
   `;
+  const {
+    rows: [user],
+  } = await db.query(sql, [userId, steamId]);
+  return user;
+}
 
-  const { rows: [user] } = await db.query(sql, [userId, steamId]);
+// Added PSN Update Function
+export async function updateUserPsnId(userId, psnId) {
+  const sql = `
+    UPDATE users
+    SET psn_id = $2
+    WHERE user_id = $1
+    RETURNING *; -- Crucial: returns all columns, including steam_id
+  `;
+  const {
+    rows: [user],
+  } = await db.query(sql, [userId, psnId]);
   return user;
 }

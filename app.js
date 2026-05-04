@@ -11,6 +11,7 @@ import gamesRouter from "#api/games";
 import sessionsRouter from "#api/sessions";
 import steamRouter from "#api/steam";
 import connectionsRouter from "./api/connections.js";
+import psnRouter from "./api/playstation.js";
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -24,6 +25,7 @@ app.use("/api/sessions", sessionsRouter);
 
 app.use("/api/steam", steamRouter);
 app.use("/api/connections", connectionsRouter);
+app.use("/api/playstation", psnRouter);
 
 
 app.use((err, req, res, next) => {
