@@ -71,7 +71,19 @@ export async function updateUserSteamId(userId, steamId) {
     WHERE user_id = $1
     RETURNING *;
   `;
-
   const { rows: [user] } = await db.query(sql, [userId, steamId]);
+  return user;
+}
+
+
+export async function updateUserXboxId(userId, xboxXuid, xboxGamertag){
+  const sql = `
+    UPDATE users
+    SET xbox_xuid = $2,
+    xbox_gamertag = $3
+    WHERE user_id = $1
+    RETURNING *;
+  `;
+  const { rows: [user] } = await db.query(sql, [userId, xboxXuid, xboxGamertag]);
   return user;
 }
