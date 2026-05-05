@@ -20,6 +20,8 @@ CREATE TABLE users (
   username TEXT UNIQUE,  
   notes TEXT,  
   steam_id TEXT UNIQUE,
+  xbox_xuid      TEXT,
+  xbox_gamertag  TEXT,
   active BOOLEAN NOT NULL DEFAULT TRUE,
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW(),
