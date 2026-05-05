@@ -1,10 +1,12 @@
 DROP TABLE IF EXISTS game_platforms;
 DROP TABLE IF EXISTS session_users;
 DROP TABLE IF EXISTS sessions;
+DROP TABLE IF EXISTS friendships;
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS platforms;
 DROP TABLE IF EXISTS games;
 DROP TABLE IF EXISTS roles;
+
 
 -- ************************ Users TABLES ************************ -- 
 CREATE TABLE roles (
@@ -26,6 +28,18 @@ CREATE TABLE users (
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW(),
   avatar_url TEXT
+);
+
+CREATE TABLE friendships ( 
+  user_id_1 INTEGER REFERENCES users(user_id) ON DELETE CASCADE,
+  user_id_2 INTEGER REFERENCES users(user_id) ON DELETE CASCADE,
+  status VARCHAR(20) DEFAULT 'pending',
+  request_sender_id INTEGER REFERENCES users(user_id) ON DELETE CASCADE,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW(),
+  CONSTRAINT pk_friendships PRIMARY KEY (user_id_1, user_id_2),
+  CONSTRAINT check_user_order CHECK (user_id_1 < user_id_2),
+  CONSTRAINT sender_validity CHECK (request_sender_id = user_id_1 OR request_sender_id = user_id_2)
 );
 
 -- ************************ Sessions TABLES ************************ -- 
