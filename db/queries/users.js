@@ -87,3 +87,32 @@ export async function updateUserXboxId(userId, xboxXuid, xboxGamertag){
   const { rows: [user] } = await db.query(sql, [userId, xboxXuid, xboxGamertag]);
   return user;
 }
+
+export async function getPendingFriendRequests(userId){
+  const sql = `
+    SELECT * 
+    FROM friendships
+    WHERE (user_id_1 = $1 OR user_id_2 = $1)
+    AND status = 'pending'
+    AND request_sender_id != $1;
+  `;
+  const { rows } = await db.query(sql, [userId]);
+  return rows;
+}
+
+export async function getFriendList(userId){
+  const sql = `
+    SELECT u.user_id, u.username 
+    FROM friendships f
+    JOIN users u ON u.user_id = (
+      CASE
+        WHEN f.user_id_1 = $1 THEN f.user_id_2
+        ELSE f.user_id_1
+      END
+    )
+    WHERE (f.user_id_1 = $1 OR f.user_id_2 = $1)
+    AND f.status = 'accepted';
+  `;
+  const { rows } = await db.query(sql, [userId]);
+  return rows;
+}
