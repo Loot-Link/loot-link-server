@@ -88,6 +88,8 @@ export async function updateUserXboxId(userId, xboxXuid, xboxGamertag){
   return user;
 }
 
+//--------------------Friend List Section ----------//
+
 export async function getPendingFriendRequests(userId){
   const sql = `
     SELECT * 
@@ -115,4 +117,31 @@ export async function getFriendList(userId){
   `;
   const { rows } = await db.query(sql, [userId]);
   return rows;
+}
+
+export async function sendFriendRequest(senderId, receiverId){
+  const sql = `
+    INSERT INTO friendships (user_id_1, user_id_2, request_sender_id, status)
+    VALUES (LEAST($1, $2), GREATEST($1, $2), $1, 'pending')
+    ON CONFLICT (user_id_1, user_id_2) DO NOTHING
+    RETURNING *;
+  `;
+  const { rows } = await db.query(sql, [senderId, receiverId]);
+  return rows[0];
+}
+
+export async function acceptFriendRequest(senderId, receiverId){
+  const sql = `
+    UPDATE friendships
+    SET 
+      status = 'accepted',
+      updated_at = NOW()
+    WHERE 
+      user_id_1 = LEAST($1, $2) AND 
+      user_id_2 = GREATEST($1, $2) AND 
+      STATUS = 'pending'
+    RETURNING *;
+  `;
+  const { rows } = await db.query(sql, [senderId, receiverId]);
+  return rows[0];
 }
