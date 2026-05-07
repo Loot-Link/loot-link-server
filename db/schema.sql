@@ -1,6 +1,7 @@
 DROP TABLE IF EXISTS game_platforms;
 DROP TABLE IF EXISTS session_users;
 DROP TABLE IF EXISTS sessions;
+DROP TABLE IF EXISTS session_messages;
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS platforms;
 DROP TABLE IF EXISTS games;
@@ -22,6 +23,10 @@ CREATE TABLE users (
   steam_id TEXT UNIQUE,
   xbox_xuid      TEXT,
   xbox_gamertag  TEXT,
+  battle_net_id TEXT UNIQUE,
+  battle_tag TEXT,
+  battle_net_region TEXT DEFAULT 'us',
+  battle_net_connected_at TIMESTAMP,
   active BOOLEAN NOT NULL DEFAULT TRUE,
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW(),
@@ -68,6 +73,32 @@ CREATE TABLE session_users (
 
   UNIQUE (session_id, user_id)
 );
+
+CREATE TABLE session_messages (
+  session_message_id SERIAL PRIMARY KEY,
+
+  session_id INTEGER NOT NULL REFERENCES sessions(session_id) ON DELETE CASCADE,
+  user_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+
+  message_text TEXT NOT NULL,
+
+  -- soft delete
+  is_deleted BOOLEAN DEFAULT false,
+  deleted_at TIMESTAMP,
+  deleted_by INTEGER REFERENCES users(user_id),
+
+  -- moderation / flagging
+  is_flagged BOOLEAN DEFAULT false,
+  flagged_at TIMESTAMP,
+  flagged_by INTEGER REFERENCES users(user_id),
+  flag_reason TEXT,
+
+  -- logging
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+
+
 
 
 -- ************************ Games TABLES ************************ -- 

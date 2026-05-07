@@ -1,8 +1,11 @@
 import express from "express";
 const router = express.Router();
 export default router;
+
 import { updateUserSteamId } from "#db/queries/users";
 import { updateUserXboxId } from "#db/queries/users";
+import { updateUserBattleNet } from "#db/queries/users";
+
 import jwt from "jsonwebtoken";
 import { createToken } from "#utils/jwt";
 
@@ -92,4 +95,63 @@ router.get("/xbox/callback", async (req, res) => {
   console.log("XBL DATA:", xblData);
 
   res.redirect("http://localhost:5173/profile");
+});
+
+
+
+//Battle.net - Blizzard
+router.get("/battlenet", (req, res) => {
+  const user = jwt.verify(req.query.token, process.env.JWT_SECRET);
+  const linkToken = createToken({ id: user.id });
+
+  const redirectUri = "http://localhost:3000/api/connections/battlenet/callback";
+
+  const authUrl =
+    "https://oauth.battle.net/authorize" +
+    "?client_id=" + process.env.BATTLENET_CLIENT_ID +
+    "&response_type=code" +
+    "&redirect_uri=" + encodeURIComponent(redirectUri) +
+    "&scope=openid" +
+    "&state=" + linkToken;
+
+  res.redirect(authUrl);
+});
+
+router.get("/battlenet/callback", async (req, res, next) => {
+  try {
+    const { code, state } = req.query;
+
+    const user = jwt.verify(state, process.env.JWT_SECRET);
+    const tokenRes = await fetch("https://oauth.battle.net/token", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      Authorization:
+        "Basic " +
+        Buffer.from(
+          process.env.BATTLENET_CLIENT_ID +
+            ":" +
+            process.env.BATTLENET_CLIENT_SECRET
+        ).toString("base64"),
+    },
+    body: new URLSearchParams({
+      grant_type: "authorization_code",
+      code,
+      redirect_uri:
+        "http://localhost:3000/api/connections/battlenet/callback",
+    }),
+  });
+
+  const tokenData = await tokenRes.json();
+  await updateUserBattleNet(
+    user.id,
+    tokenData.sub,
+    null,
+    "us"
+  );
+
+  res.redirect("http://localhost:5173/profile");
+  } catch (err) {
+    next(err);
+  }
 });
