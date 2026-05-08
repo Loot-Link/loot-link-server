@@ -76,3 +76,36 @@ export async function updateUserPsnId(userId, psnId) {
   } = await db.query(sql, [userId, psnId]);
   return user;
 }
+
+
+export async function updateUserXboxId(userId, xboxXuid, xboxGamertag){
+  const sql = `
+    UPDATE users
+    SET xbox_xuid = $2,
+    xbox_gamertag = $3
+    WHERE user_id = $1
+    RETURNING *;
+  `;
+  const { rows: [user] } = await db.query(sql, [userId, xboxXuid, xboxGamertag]);
+  return user;
+}
+
+
+export async function updateUserBattleNet(userId, battleNetId, battleTag, region) {
+  const {
+    rows: [user],
+  } = await db.query(
+    `
+    UPDATE users
+    SET battle_net_id = $2,
+        battle_tag = $3,
+        battle_net_region = $4,
+        battle_net_connected_at = NOW()
+    WHERE user_id = $1
+    RETURNING *
+    `,
+    [userId, battleNetId, battleTag, region]
+  );
+
+  return user;
+}

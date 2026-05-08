@@ -5,11 +5,16 @@ export default app;
 import morgan from "morgan";
 import getUserFromToken from "#middleware/getUserFromToken";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 
 import usersRouter from "#api/users";
 import gamesRouter from "#api/games";
 import sessionsRouter from "#api/sessions";
+import sessionMessagesRouter from "#api/sessionmessages";
+
 import steamRouter from "#api/steam";
+import xboxRouter from "#api/xbox";
+import battleNetRouter from "#api/battlenet";
 import connectionsRouter from "./api/connections.js";
 import psnRouter from "./api/playstation.js";
 
@@ -18,12 +23,17 @@ app.use(express.urlencoded({ extended: true }));
 app.use(morgan("dev"));
 app.use(cors());
 app.use(getUserFromToken); 
+app.use(cookieParser());
+
+
 
 app.use("/api/users", usersRouter);
 app.use("/api/games", gamesRouter);
 app.use("/api/sessions", sessionsRouter);
-
+app.use("/api/session-messages", sessionMessagesRouter);
+app.use("/api/battlenet", battleNetRouter);
 app.use("/api/steam", steamRouter);
+app.use("/api/xbox", xboxRouter);
 app.use("/api/connections", connectionsRouter);
 app.use("/api/playstation", psnRouter);
 

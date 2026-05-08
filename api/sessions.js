@@ -62,47 +62,14 @@ router.post("/:id/join", requireUser, async (req, res) => {
   }
 });
 
+router.get("/:sessionId", async (req, res) => {
+  const session = await getSessionById(req.params.sessionId);
+  if (!session) return res.status(404).send("Session ID not found.");
+  res.send(session);
+});
 
-//EMJ Testing for gettin images to load 
-// router.get("/", async (req, res) => {
-//   const games = await getGames();
-
-//   const tokenResponse = await fetch("https://id.twitch.tv/oauth2/token", {
-//     method: "POST",
-//     headers: {
-//       "Content-Type": "application/x-www-form-urlencoded",
-//     },
-//     body: `client_id=${process.env.TWITCH_CLIENT_ID}&client_secret=${process.env.TWITCH_CLIENT_SECRET}&grant_type=client_credentials`,
-//   });
-
-//   const tokenData = await tokenResponse.json();
-//   const accessToken = tokenData.access_token;
-
-//   const gamesWithImages = await Promise.all(
-//     games.map(async (game) => {
-//       const igdbResponse = await fetch("https://api.igdb.com/v4/games", {
-//         method: "POST",
-//         headers: {
-//           "Client-ID": process.env.TWITCH_CLIENT_ID,
-//           "Authorization": `Bearer ${accessToken}`,
-//         },
-//         body: `search "${game.game_title}"; fields name, cover.url; limit 3;`,
-//       });
-
-//       const igdbData = await igdbResponse.json();
-//       const match = igdbData[0];
-
-//       return {
-//         ...game,
-//         image: match?.cover?.url ? "https:" + match.cover.url : null,
-//       };
-//     })
-//   );
-
-//   res.send(gamesWithImages);
-// });
-
-
-
-
-
+router.get("/:sessionId/users", async (req, res) => {
+  const sessionUsers = await getSessionUsers(req.params.sessionId);
+  if (sessionUsers.length === 0) return res.status(404).send("Session Users not found.");
+  res.send(sessionUsers);
+});
