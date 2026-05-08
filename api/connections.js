@@ -1,7 +1,11 @@
 import express from "express";
 const router = express.Router();
 export default router;
+
 import { updateUserSteamId } from "#db/queries/users";
+import { updateUserXboxId } from "#db/queries/users";
+import { updateUserBattleNet } from "#db/queries/users";
+
 import jwt from "jsonwebtoken";
 import { createToken } from "#utils/jwt";
 
@@ -27,7 +31,6 @@ router.get("/steam", (req, res) => {
   res.redirect(steamLoginUrl);
 });
 
-
 router.get("/steam/callback", async (req, res) => {
 
   console.log(req.query);
@@ -43,4 +46,112 @@ router.get("/steam/callback", async (req, res) => {
   //EMJ - this redirects u to ur profile page after steam sign in button
   res.redirect("http://localhost:5173/profile");
   console.log("Steam ID:", steamId);
+});
+
+
+
+
+
+
+//Xbox - Azure - https://login.microsoftonline.com/{tenant}/oauth2/v2.0/authorize
+router.get("/xbox", async (req, res) => {
+  const user = jwt.verify(req.query.token, process.env.JWT_SECRET);
+  const linkToken = createToken({ id: user.id });
+  const returnUrl = `http://localhost:3000/api/connections/xbox/callback`;
+
+  const xboxLoginURL =
+    `https://api.xbl.io/app/auth/${process.env.OPENXBL_PUBLIC_KEY}` +
+    `?state=${req.query.token}`;
+    res.cookie("xbox_link_user_id", user.id, {
+      httpOnly: true,
+      sameSite: "lax",
+    });
+  res.redirect(xboxLoginURL);
+});
+
+router.get("/xbox/callback", async (req, res) => {
+  console.log("OpenXBL callback query:", req.query);
+
+  const { code } = req.query;
+
+  // get user from cookie instead of state
+  const id = req.cookies.xbox_link_user_id;
+
+  const claimRes = await fetch("https://api.xbl.io/app/claim", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      code,
+      app_key: process.env.OPENXBL_PUBLIC_KEY,
+    }),
+  });
+
+  const xblData = await claimRes.json();
+
+  await updateUserXboxId(id, xblData.xuid, xblData.gamertag);
+
+  console.log("XBL DATA:", xblData);
+
+  res.redirect("http://localhost:5173/profile");
+});
+
+
+
+//Battle.net - Blizzard
+router.get("/battlenet", (req, res) => {
+  const user = jwt.verify(req.query.token, process.env.JWT_SECRET);
+  const linkToken = createToken({ id: user.id });
+
+  const redirectUri = "http://localhost:3000/api/connections/battlenet/callback";
+
+  const authUrl =
+    "https://oauth.battle.net/authorize" +
+    "?client_id=" + process.env.BATTLENET_CLIENT_ID +
+    "&response_type=code" +
+    "&redirect_uri=" + encodeURIComponent(redirectUri) +
+    "&scope=openid" +
+    "&state=" + linkToken;
+
+  res.redirect(authUrl);
+});
+
+router.get("/battlenet/callback", async (req, res, next) => {
+  try {
+    const { code, state } = req.query;
+
+    const user = jwt.verify(state, process.env.JWT_SECRET);
+    const tokenRes = await fetch("https://oauth.battle.net/token", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      Authorization:
+        "Basic " +
+        Buffer.from(
+          process.env.BATTLENET_CLIENT_ID +
+            ":" +
+            process.env.BATTLENET_CLIENT_SECRET
+        ).toString("base64"),
+    },
+    body: new URLSearchParams({
+      grant_type: "authorization_code",
+      code,
+      redirect_uri:
+        "http://localhost:3000/api/connections/battlenet/callback",
+    }),
+  });
+
+  const tokenData = await tokenRes.json();
+  await updateUserBattleNet(
+    user.id,
+    tokenData.sub,
+    null,
+    "us"
+  );
+
+  res.redirect("http://localhost:5173/profile");
+  } catch (err) {
+    next(err);
+  }
 });

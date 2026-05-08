@@ -2,6 +2,12 @@
 npm run db:reset
 npm install -g nodemon
 Now it auto-restarts whenever you save a file
+http://localhost:3000/api/games/populate-images
+
+
+xbl emj api key 
+05203028-7708-4538-8499-dffda1f36613
+
 
 4/29/2026 - testing first upload after branch
 
