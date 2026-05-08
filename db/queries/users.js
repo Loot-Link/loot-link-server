@@ -88,6 +88,26 @@ export async function updateUserXboxId(userId, xboxXuid, xboxGamertag){
   return user;
 }
 
+
+export async function updateUserBattleNet(userId, battleNetId, battleTag, region) {
+  const {
+    rows: [user],
+  } = await db.query(
+    `
+    UPDATE users
+    SET battle_net_id = $2,
+        battle_tag = $3,
+        battle_net_region = $4,
+        battle_net_connected_at = NOW()
+    WHERE user_id = $1
+    RETURNING *
+    `,
+    [userId, battleNetId, battleTag, region]
+  );
+
+  return user;
+}
+
 //--------------------Friend List Section ----------//
 
 export async function getPendingFriendRequests(userId){
