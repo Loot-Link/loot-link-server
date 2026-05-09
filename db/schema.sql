@@ -1,12 +1,12 @@
-DROP TABLE IF EXISTS game_platforms;
-DROP TABLE IF EXISTS session_users;
-DROP TABLE IF EXISTS sessions;
-DROP TABLE IF EXISTS friendships;
-DROP TABLE IF EXISTS session_messages;
-DROP TABLE IF EXISTS users;
-DROP TABLE IF EXISTS platforms;
-DROP TABLE IF EXISTS games;
-DROP TABLE IF EXISTS roles;
+DROP TABLE IF EXISTS game_platforms; -- Depends on games & platforms
+DROP TABLE IF EXISTS session_users; --Depends on sessions & users
+DROP TABLE IF EXISTS session_messages; --Depends on sessions & users
+DROP TABLE IF EXISTS sessions; -- Depends on users
+DROP TABLE IF EXISTS friendships; --Depends on users
+DROP TABLE IF EXISTS users; --Depends on roles
+DROP TABLE IF EXISTS platforms; --No current dependencies
+DROP TABLE IF EXISTS games; --No current dependencies
+DROP TABLE IF EXISTS roles; --No current dependencies
 
 
 -- ************************ Users TABLES ************************ -- 
