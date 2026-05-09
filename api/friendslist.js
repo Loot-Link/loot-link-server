@@ -16,7 +16,7 @@ router.get('/', getUserFromToken, async (req, res, next)=>{
         const friends = await getFriendList(req.user.user_id);
         res.send(friends);
     }catch(err){
-        res.status(500).send("Server error");
+        next(err);
     }
 });
 //Get list of friend requests for the user
@@ -25,28 +25,28 @@ router.get('/requests', getUserFromToken, async (req, res, next)=>{
         const requests = await getPendingFriendRequests(req.user.user_id);
         res.send(requests);
     } catch (err) {
-        res.status(500).send("Server Error");
+        next(err);
     }
 });
 //User send a friend request
 router.post('/request/:receiverId', getUserFromToken, async (req, res, next)=>{
     try {
         const senderId = req.user.user_id;
-        const { receiverId } = req.params;
+        const receiverId  = Number(req.params.receiverId);
         const newRequest = await sendFriendRequest(senderId, receiverId);
         res.status(201).send(newRequest);
     } catch (err) {
-        res.status(500).send("Server Error");
+        next(err);
     }
 });
 //User Accepts a friend request
 router.post('/accept/:senderId', getUserFromToken, async (req, res, next)=>{
   try {
-    const { senderId } = req.params;
+    const senderId  = Number(req.params.senderId);
     const receiverId = req.user.user_id;
     const acceptFriend = await acceptFriendRequest(senderId, receiverId);
     res.status(200).send(acceptFriend);
   }catch(err){
-    res.status(500).send("Server Error");
+    next(err);
   } 
 });

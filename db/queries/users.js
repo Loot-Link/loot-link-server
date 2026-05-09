@@ -112,11 +112,14 @@ export async function updateUserBattleNet(userId, battleNetId, battleTag, region
 
 export async function getPendingFriendRequests(userId){
   const sql = `
-    SELECT * 
-    FROM friendships
+    SELECT 
+      f.*,
+      u.username 
+    FROM friendships f
+    JOIN users u ON f.request_sender_id = u.user_id
     WHERE (user_id_1 = $1 OR user_id_2 = $1)
-    AND status = 'pending'
-    AND request_sender_id != $1;
+    AND f.status = 'pending'
+    AND f.request_sender_id != $1;
   `;
   const { rows } = await db.query(sql, [userId]);
   return rows;
@@ -142,7 +145,11 @@ export async function getFriendList(userId){
 export async function sendFriendRequest(senderId, receiverId){
   const sql = `
     INSERT INTO friendships (user_id_1, user_id_2, request_sender_id, status)
-    VALUES (LEAST($1, $2), GREATEST($1, $2), $1, 'pending')
+    VALUES (
+      LEAST($1::int, $2::int), 
+      GREATEST($1::int, $2::int), $1::int, 
+      'pending'
+      )
     ON CONFLICT (user_id_1, user_id_2) DO NOTHING
     RETURNING *;
   `;
@@ -157,8 +164,8 @@ export async function acceptFriendRequest(senderId, receiverId){
       status = 'accepted',
       updated_at = NOW()
     WHERE 
-      user_id_1 = LEAST($1, $2) AND 
-      user_id_2 = GREATEST($1, $2) AND 
+      user_id_1 = LEAST($1::int, $2::int) AND 
+      user_id_2 = GREATEST($1::int, $2::int) AND 
       STATUS = 'pending'
     RETURNING *;
   `;
