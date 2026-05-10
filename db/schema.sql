@@ -151,40 +151,37 @@ CREATE TABLE game_platforms (
 
 ------ Reviews Tables ------
 
-CREATE TABLE game_reviews (
-  review_id SERIAL PRIMARY KEY,
-  game_id INT NOT NULL REFERENCES games(game_id) ON DELETE CASCADE,
-  platform_id INT NOT NULL REFERENCES platforms(platform_id) ON DELETE CASCADE,
-  game_platform_id INT NOT NULL REFERENCES game_platforms(game_platform_id),
-  user_id INT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
-  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMP NOT NULL DEFAULT NOW()
-);
+-- CREATE TABLE game_reviews (
+--   review_id SERIAL PRIMARY KEY,
+--   game_id INT NOT NULL REFERENCES games(game_id) ON DELETE CASCADE,
+--   platform_id INT NOT NULL REFERENCES platforms(platform_id) ON DELETE CASCADE,
+--   game_platform_id INT NOT NULL REFERENCES game_platforms(game_platform_id),
+--   user_id INT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+--   created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+--   updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+--   rating_value INT NOT NULL CHECK (rating_value IN (1, 2, 3, 4, 5)),
+-- );
 
-CREATE TABLE session_reviews (
-  review_id SERIAL PRIMARY KEY,
-  session_id INT NOT NULL REFERENCES sessions(session_id) ON DELETE CASCADE,
-  user_id INT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
-);
+-- CREATE TABLE session_reviews (
+--   review_id SERIAL PRIMARY KEY,
+--   session_id INT NOT NULL REFERENCES sessions(session_id) ON DELETE CASCADE,
+--   user_id INT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+--   rating_value INT NOT NULL CHECK (rating_value IN (1, 2, 3, 4, 5)),
+-- );
 
-CREATE TABLE my_reviews (
-  review_id SERIAL PRIMARY KEY,
-  user_id INT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
-  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMP NOT NULL DEFAULT NOW()
-);
+-- CREATE TABLE my_reviews (
+--   review_id SERIAL PRIMARY KEY,
+--   user_id INT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+--   created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+--   updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+--   rating_value INT NOT NULL CHECK (rating_value IN (1, 2, 3, 4, 5)),
+-- );
 
-CREATE TABLE popular_reviews (
-  review_id SERIAL PRIMARY KEY,
-  game_id INT NOT NULL REFERENCES games(game_id) ON DELETE CASCADE,
-  platform_id INT NOT NULL REFERENCES platforms(platform_id) ON DELETE CASCADE,
-  game_platform_id INT NOT NULL REFERENCES game_platforms(game_platform_id),
-  user_id INT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE
-);
-
-CREATE TABLE reviews_ratings (
-  rating_id SERIAL PRIMARY KEY,
-  review_id INT NOT NULL,
-  user_id INT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
-  rating_value INT NOT NULL CHECK (rating_value >= 1 AND rating_value <= 5),
-);
+-- CREATE TABLE popular_reviews (
+--   review_id SERIAL PRIMARY KEY,
+--   game_id INT NOT NULL REFERENCES games(game_id) ON DELETE CASCADE,
+--   platform_id INT NOT NULL REFERENCES platforms(platform_id) ON DELETE CASCADE,
+--   game_platform_id INT NOT NULL REFERENCES game_platforms(game_platform_id),
+--   user_id INT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+--   rating_value INT NOT NULL CHECK (rating_value IN (1, 2, 3, 4, 5))
+-- );
