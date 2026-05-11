@@ -6,7 +6,8 @@ import {
     getPendingFriendRequests, 
     getFriendList, 
     sendFriendRequest,
-    acceptFriendRequest } from "#db/queries/users";
+    acceptFriendRequest, 
+    getUserByUserName} from "#db/queries/users";
 
 import getUserFromToken from "#middleware/getUserFromToken";
 
@@ -29,11 +30,21 @@ router.get('/requests', getUserFromToken, async (req, res, next)=>{
     }
 });
 //User send a friend request
-router.post('/request/:receiverId', getUserFromToken, async (req, res, next)=>{
+router.post('/request/:username', getUserFromToken, async (req, res, next)=>{
     try {
+        const {username} = req.params
         const senderId = req.user.user_id;
-        const receiverId  = Number(req.params.receiverId);
+        const targetUsername = await getUserByUserName(username);
+        if(!targetUsername){
+            return res.status(404).send({message: "User not found. Check the spelling."})
+        }
+
+        const receiverId  = targetUsername.user_id;
+        console.log(targetUsername.user_id);
         const newRequest = await sendFriendRequest(senderId, receiverId);
+        if(!newRequest){
+            return res.status(409).send({message: "A request is already pending"});
+        }
         res.status(201).send(newRequest);
     } catch (err) {
         next(err);
@@ -44,6 +55,9 @@ router.post('/accept/:senderId', getUserFromToken, async (req, res, next)=>{
   try {
     const senderId  = Number(req.params.senderId);
     const receiverId = req.user.user_id;
+    if(receiverId === senderId){
+        return res.status(400).send({message: "You can't accept your own request"});
+    }
     const acceptFriend = await acceptFriendRequest(senderId, receiverId);
     res.status(200).send(acceptFriend);
   }catch(err){

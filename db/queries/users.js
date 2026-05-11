@@ -63,6 +63,16 @@ export async function getUserById(id) {
   return user;
 }
 
+export async function getUserByUserName(username) {
+  const sql = `
+  SELECT *
+  FROM users
+  WHERE username = $1
+  `;
+  const { rows: [user]} = await db.query(sql, [username]);
+  return user;
+}
+
 
 export async function updateUserSteamId(userId, steamId) {
   const sql = `
@@ -114,12 +124,15 @@ export async function getPendingFriendRequests(userId){
   const sql = `
     SELECT 
       f.*,
-      u.username 
+      u.username AS friend_username,
+      u.user_id AS friend_id
     FROM friendships f
-    JOIN users u ON f.request_sender_id = u.user_id
-    WHERE (user_id_1 = $1 OR user_id_2 = $1)
+    JOIN users u ON (
+      (f.user_id_1 = u.user_id AND f.user_id_2 = $1) OR 
+      (f.user_id_2 = u.user_id AND f.user_id_1 = $1)
+    )
+    WHERE (f.user_id_1 = $1 OR f.user_id_2 = $1)
     AND f.status = 'pending'
-    AND f.request_sender_id != $1;
   `;
   const { rows } = await db.query(sql, [userId]);
   return rows;
