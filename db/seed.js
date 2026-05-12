@@ -243,22 +243,22 @@ async function seed() {
 
 const friendships = [
   // Billy (3) is friends with all other Admins (1, 2, 4)
-  { u1: 1, u2: 3, sender: 3, status: 'accepted' },
-  { u1: 2, u2: 3, sender: 3, status: 'accepted' },
-  { u1: 3, u2: 4, sender: 3, status: 'accepted' },
+  { u1: 1, u2: 3, status: 'accepted' },
+  { u1: 2, u2: 3, status: 'accepted' },
+  { u1: 3, u2: 4, status: 'accepted' },
 
   // Pending requests for other admins to handle
-  { u1: 1, u2: 2, sender: 1, status: 'pending' },
-  { u1: 2, u2: 4, sender: 2, status: 'pending' },
-  { u1: 1, u2: 4, sender: 4, status: 'pending' },
+  { u1: 1, u2: 2, status: 'pending' },
+  { u1: 2, u2: 4, status: 'pending' },
+  { u1: 1, u2: 4, status: 'pending' },
 ];
 
 for (const f of friendships) {
   await db.query(`
-    INSERT INTO friendships (user_id_1, user_id_2, request_sender_id, status)
-    VALUES ($1, $2, $3, $4)
-    ON CONFLICT (user_id_1, user_id_2) DO NOTHING
-  `, [f.u1, f.u2, f.sender, f.status]);
+    INSERT INTO friendships (sender_id, receiver_id, status)
+    VALUES ($1, $2, $3)
+    ON CONFLICT (sender_id, receiver_id) DO NOTHING
+  `, [f.u1, f.u2, f.status]);
 }
 
 

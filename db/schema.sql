@@ -34,17 +34,14 @@ CREATE TABLE users (
   updated_at TIMESTAMP DEFAULT NOW(),
   avatar_url TEXT
 );
-
+--See if I can simplify this to not use 3 user_id fields. Just Sender, receiver. Check for existing requests elsewhere  --to prevent duplicate rows. 
 CREATE TABLE friendships ( 
-  user_id_1 INTEGER REFERENCES users(user_id) ON DELETE CASCADE,
-  user_id_2 INTEGER REFERENCES users(user_id) ON DELETE CASCADE,
+  sender_id INTEGER REFERENCES users(user_id) ON DELETE CASCADE,
+  receiver_id INTEGER REFERENCES users(user_id) ON DELETE CASCADE,
   status VARCHAR(20) DEFAULT 'pending',
-  request_sender_id INTEGER REFERENCES users(user_id) ON DELETE CASCADE,
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW(),
-  CONSTRAINT pk_friendships PRIMARY KEY (user_id_1, user_id_2),
-  CONSTRAINT check_user_order CHECK (user_id_1 < user_id_2),
-  CONSTRAINT sender_validity CHECK (request_sender_id = user_id_1 OR request_sender_id = user_id_2)
+  CONSTRAINT pk_friendships PRIMARY KEY (sender_id, receiver_id)
 );
 
 -- ************************ Sessions TABLES ************************ -- 

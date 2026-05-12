@@ -7,10 +7,10 @@ import {
     getFriendList, 
     sendFriendRequest,
     acceptFriendRequest, 
-    getUserByUserName,
-    denyFriendRequest} from "#db/queries/users";
+    denyFriendRequest} from "#db/queries/friendQuery";
 
 import getUserFromToken from "#middleware/getUserFromToken";
+import { getUserByUserName } from "#db/queries/users";
 
 //Get list of user's friends
 router.get('/', getUserFromToken, async (req, res, next)=>{
@@ -36,6 +36,10 @@ router.post('/request/:username', getUserFromToken, async (req, res, next)=>{
         const {username} = req.params
         const senderId = req.user.user_id;
         const targetUsername = await getUserByUserName(username);
+        //Check for already pending requests here before sending new request
+        //const pendingRequests = await getPendingFriendRequests(req.user.user_id)
+        //const alreadyPending = pendingRequests.some(req => req.friend_id === receiver_id);
+        //if(targetUsername.user_id === pendingRequests.id){return res.status(bad)}
         if(!targetUsername){
             return res.status(404).send({message: "User not found. Check the spelling."})
         }
