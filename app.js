@@ -18,6 +18,7 @@ import battleNetRouter from "#api/battlenet";
 import connectionsRouter from "./api/connections.js";
 import psnRouter from "./api/playstation.js";
 
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan("dev"));

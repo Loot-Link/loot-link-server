@@ -1,75 +1,83 @@
 import express from "express";
-import fetch from "node-fetch";
-import { 
-  getSessions, 
-  getSessionById, 
-  createSession, 
-  addUserToSession, 
-  getSessionUsers, 
-} from "#db/queries/sessions";
-
-import requireBody from "#middleware/requireBody";
-import requireUser from "#middleware/requireUser";
-import { createToken } from "#utils/jwt";
-
 const router = express.Router();
 export default router;
 
-//EMJ - This feels very public so we'll leave it simple
-// 1. Get a single session's details and its players
-router.get("/:id", async (req, res) => {
+import { 
+  getSessions, 
+  getSessionById, 
+  getSessionUsers, 
+  createSession, 
+  addUserToSession,
+  getSessionsByUserId 
+} from "#db/queries/sessions";
+import requireBody from "#middleware/requireBody";
+import requireUser from "#middleware/requireUser";
+
+// 1. GET all sessions (Matches your Home/Catalog pages)
+router.get("/", async (req, res) => {
+  const sessions = await getSessions();
+  res.send(sessions);
+});
+
+// 2. GET My Active Sessions (REQUIRED for Profile.jsx)
+router.get("/user/me", requireUser, async (req, res) => {
   try {
-    const session = await getSessionById(req.params.id);
+    const sessions = await getSessionsByUserId(req.user.user_id);
+    res.send(sessions);
+  } catch (err) {
+    res.status(500).send("Error fetching your sessions");
+  }
+});
+
+// 3. GET Session Details (Combined Logic)
+// Standardized to :sessionId to match your coworker's frontend and README
+router.get("/:sessionId", async (req, res) => {
+  try {
+    const session = await getSessionById(req.params.sessionId);
     if (!session) return res.status(404).send("Session not found");
     
-    // Waterfall: fetch the users currently in this session
-    const players = await getSessionUsers(req.params.id);
-    
+    // We fetch players automatically to support your "waterfall" logic
+    const players = await getSessionUsers(req.params.sessionId);
     res.send({ ...session, players });
   } catch (err) {
     res.status(500).send("Error fetching session details");
   }
 });
 
-// 2. Create a new session (Requires Auth)
+// 4. GET Session Users (Coworker's specific endpoint)
+router.get("/:sessionId/users", async (req, res) => {
+  try {
+    const sessionUsers = await getSessionUsers(req.params.sessionId);
+    if (sessionUsers.length === 0) return res.status(404).send("No users in this session.");
+    res.send(sessionUsers);
+  } catch (err) {
+    res.status(500).send("Error fetching session users");
+  }
+});
+
+// 5. POST Create Session (Your Logic)
 router.post("/", requireUser, requireBody(["game_id", "session_title"]), async (req, res) => {
   try {
     const session = await createSession({
       ...req.body,
       host_user_id: req.user.user_id
     });
-    
-    // Automatically add the host as the first player in session_users
+    // Auto-add creator as first member
     await addUserToSession(session.session_id, req.user.user_id);
-    
     res.status(201).send(session);
   } catch (err) {
     res.status(500).send("Error creating session");
   }
 });
 
-// 3. Join a session (Requires Auth)
-router.post("/:id/join", requireUser, async (req, res) => {
+// 6. POST Join Session (Your Logic)
+// Updated to :sessionId for consistency
+router.post("/:sessionId/join", requireUser, async (req, res) => {
   try {
-    const sessionUser = await addUserToSession(req.params.id, req.user.user_id);
+    const sessionUser = await addUserToSession(req.params.sessionId, req.user.user_id);
     res.status(201).send(sessionUser);
   } catch (err) {
-    // Check for your 23505 unique constraint error (user already in session)
-    if (err.code === "23505") {
-      return res.status(400).send("You are already in this session");
-    }
+    if (err.code === "23505") return res.status(400).send("Already in session");
     res.status(500).send("Error joining session");
   }
-});
-
-router.get("/:sessionId", async (req, res) => {
-  const session = await getSessionById(req.params.sessionId);
-  if (!session) return res.status(404).send("Session ID not found.");
-  res.send(session);
-});
-
-router.get("/:sessionId/users", async (req, res) => {
-  const sessionUsers = await getSessionUsers(req.params.sessionId);
-  if (sessionUsers.length === 0) return res.status(404).send("Session Users not found.");
-  res.send(sessionUsers);
 });

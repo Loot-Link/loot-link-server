@@ -1,11 +1,11 @@
-DROP TABLE IF EXISTS game_platforms;
-DROP TABLE IF EXISTS session_users;
-DROP TABLE IF EXISTS sessions;
-DROP TABLE IF EXISTS session_messages;
-DROP TABLE IF EXISTS users;
-DROP TABLE IF EXISTS platforms;
-DROP TABLE IF EXISTS games;
-DROP TABLE IF EXISTS roles;
+DROP TABLE IF EXISTS game_platforms CASCADE;
+DROP TABLE IF EXISTS session_users CASCADE;
+DROP TABLE IF EXISTS session_messages CASCADE; 
+DROP TABLE IF EXISTS sessions CASCADE;
+DROP TABLE IF EXISTS users CASCADE;
+DROP TABLE IF EXISTS platforms CASCADE;
+DROP TABLE IF EXISTS games CASCADE;
+DROP TABLE IF EXISTS roles CASCADE;
 
 -- ************************ Users TABLES ************************ -- 
 CREATE TABLE roles (
