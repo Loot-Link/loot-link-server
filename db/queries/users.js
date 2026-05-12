@@ -185,3 +185,12 @@ export async function acceptFriendRequest(senderId, receiverId){
   const { rows } = await db.query(sql, [senderId, receiverId]);
   return rows[0];
 }
+
+export async function denyFriendRequest(senderId, receiverId){
+  const sql = `
+    DELETE FROM friendships
+    WHERE 
+    user_id_1 = LEAST($1::int, $2::int) AND
+    user_id_2 = GREATEST($1::int, $2::int) 
+  `;
+}

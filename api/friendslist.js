@@ -7,7 +7,8 @@ import {
     getFriendList, 
     sendFriendRequest,
     acceptFriendRequest, 
-    getUserByUserName} from "#db/queries/users";
+    getUserByUserName,
+    denyFriendRequest} from "#db/queries/users";
 
 import getUserFromToken from "#middleware/getUserFromToken";
 
@@ -63,4 +64,17 @@ router.post('/accept/:senderId', getUserFromToken, async (req, res, next)=>{
   }catch(err){
     next(err);
   } 
+});
+
+//User denies a friend request (Should also work for removing a friendship)
+router.delete('/deny/:senderId', getUserFromToken, async (req, res, next)=>{
+    try {
+        const senderId = Number(req.params.senderId);
+        const receiverId = req.user.user_id;
+        
+        const denyRequest = await denyFriendRequest(senderId, receiverId);
+        res.status(200).send(denyRequest);
+    } catch (err) {
+        next(err);        
+    }
 });
