@@ -8,8 +8,6 @@ DROP TABLE IF EXISTS games;
 DROP TABLE IF EXISTS roles;
 DROP TABLE IF EXISTS game_reviews;
 DROP TABLE IF EXISTS session_reviews;
-DROP TABLE IF EXISTS my_reviews;
-DROP TABLE IF EXISTS popular_reviews;
 
 -- ************************ Users TABLES ************************ -- 
 CREATE TABLE roles (
@@ -157,11 +155,12 @@ CREATE TABLE game_platforms (
 
 CREATE TABLE game_reviews (
   game_review_id SERIAL PRIMARY KEY,
-  game_id INT NOT NULL REFERENCES games(game_id) ON DELETE CASCADE,
-  game_title TEXT NOT NULL REFERENCES games(game_title) ON DELETE CASCADE,
-  genre TEXT NOT NULL REFERENCES games(genre) ON DELETE CASCADE,
-  category TEXT NOT NULL REFERENCES games(category) ON DELETE CASCADE,
-  platform_id INT NOT NULL REFERENCES platforms(platform_id) ON DELETE CASCADE,
+  game_review TEXT VARCHAR(800),
+  game_id INT NOT NULL REFERENCES games(game_id) 
+  game_title TEXT NOT NULL REFERENCES games(game_title) 
+  genre TEXT NOT NULL REFERENCES games(genre) 
+  category TEXT NOT NULL REFERENCES games(category) 
+  platform_id INT NOT NULL REFERENCES platforms(platform_id)
   game_platform_id INT NOT NULL REFERENCES game_platforms(game_platform_id),
 
   --- User, rating and timestamp
@@ -169,6 +168,7 @@ CREATE TABLE game_reviews (
   created_at TIMESTAMP NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
   rating_value INT NOT NULL CHECK (rating_value IN (1, 2, 3, 4, 5)),
+  view_counter INT NOT NULL DEFAULT 0,
 
   -- moderation / flagging
   is_flagged BOOLEAN DEFAULT false,
@@ -179,43 +179,8 @@ CREATE TABLE game_reviews (
 
 CREATE TABLE session_reviews (
   session_review_id SERIAL PRIMARY KEY,
-  session_id INT NOT NULL REFERENCES sessions(session_id) ON DELETE CASCADE,
-  user_id INT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
-  rating_value INT NOT NULL CHECK (rating_value IN (1, 2, 3, 4, 5)),
-
-  -- moderation / flagging
-  is_flagged BOOLEAN DEFAULT false,
-  flagged_at TIMESTAMP,
-  flagged_by INTEGER REFERENCES users(user_id),
-  flag_reason TEXT,
-);
-
-CREATE TABLE my_reviews (
-  my_review_id SERIAL PRIMARY KEY,
-  game_id INT NOT NULL REFERENCES games(game_id) ON DELETE CASCADE,
-  game_title TEXT NOT NULL REFERENCES games(game_title) ON DELETE CASCADE,
-  genre TEXT NOT NULL REFERENCES games(genre) ON DELETE CASCADE,
-  category TEXT NOT NULL REFERENCES games(category) ON DELETE CASCADE,
-  platform_id INT NOT NULL REFERENCES platforms(platform_id) ON DELETE CASCADE,
-  game_platform_id INT NOT NULL REFERENCES game_platforms(game_platform_id),
-  user_id INT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
-  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
-  rating_value INT NOT NULL CHECK (rating_value IN (1, 2, 3, 4, 5)),
-
-  -- moderation / flagging
-  is_flagged BOOLEAN DEFAULT false,
-  flagged_at TIMESTAMP,
-  flagged_by INTEGER REFERENCES users(user_id),
-  flag_reason TEXT,
-);
-
-CREATE TABLE popular_reviews (
-  popular_review_id SERIAL PRIMARY KEY,
-  game_id INT NOT NULL REFERENCES games(game_id) ON DELETE CASCADE,
-  platform_id INT NOT NULL REFERENCES platforms(platform_id) ON DELETE CASCADE,
-  game_platform_id INT NOT NULL REFERENCES game_platforms(game_platform_id),
-  user_id INT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+  session_id INT NOT NULL REFERENCES sessions(session_id) 
+  user_id INT NOT NULL REFERENCES users(user_id)
   rating_value INT NOT NULL CHECK (rating_value IN (1, 2, 3, 4, 5)),
 
   -- moderation / flagging

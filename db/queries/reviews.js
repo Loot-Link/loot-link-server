@@ -4,6 +4,7 @@ import db from '#db/client';
 
 export async function createGameReviews(
     gameReviewId,
+    gameReview,
     gameId,
     gameTitle,
     genre,
@@ -72,7 +73,8 @@ export async function getGameReviewByGameId(gameId) {
     const sql = `
     SELECT games.*
     FROM game_reviews
-    JOIN game_id ON game_reviews.game_id = games.game_id
+    JOIN games ON game_reviews.game_id = games.game_id
+    WHERE games.game_id = $1
     `;
     const { rows: [gameReveiws] } = await db.query(sql, [gameId]);
     return gameReviews;
@@ -82,48 +84,48 @@ export async function getGameReviewByGameId(gameId) {
 
 /* ====== Session Reviews ====== */
 
-export async function createSessionReview(
-    sessionReviewId,
-    sessionId,
-    userId,
-    ratingValue
-) {
-    const sql = `
-    INSERT INTO session_reviews (
-        session_review_id,
-        session_id,
-        user_id,
-        rating_value
-    )
-    VALUES ($1, $2, $3, $4)
-    RETURNING *
-    `;
-    const { rows: [sessionReview] } = await db.query(sql, [
-        sessionReviewId,
-        sessionId,
-        userId,
-        ratingValue
-    ]);
-    return sessionReview;
-};
+// export async function createSessionReview(
+//     sessionReviewId,
+//     sessionId,
+//     userId,
+//     ratingValue
+// ) {
+//     const sql = `
+//     INSERT INTO session_reviews (
+//         session_review_id,
+//         session_id,
+//         user_id,
+//         rating_value
+//     )
+//     VALUES ($1, $2, $3, $4)
+//     RETURNING *
+//     `;
+//     const { rows: [sessionReview] } = await db.query(sql, [
+//         sessionReviewId,
+//         sessionId,
+//         userId,
+//         ratingValue
+//     ]);
+//     return sessionReview;
+// };
 
-export async function getSessionReviews() {
-    const sql = `
-    SELECT *
-    FROM session_reviews
-    `;
-    const { rows: sessionReviews } = await db.query(sql);
-    return sessionReviews;
-};
+// export async function getSessionReviews() {
+//     const sql = `
+//     SELECT *
+//     FROM session_reviews
+//     `;
+//     const { rows: sessionReviews } = await db.query(sql);
+//     return sessionReviews;
+// };
 
-export async function getSessionReviewById(sessionReviewId) {
-    const sql = `
-    SELECT *
-    FROM session_reviews
-    WHERE session_id = $1
-    `;
-    const { rows: [sessionReview] } = await db.query(sql, [sessionReviewId]);
-    return sessionReview;
-};
+// export async function getSessionReviewById(sessionReviewId) {
+//     const sql = `
+//     SELECT *
+//     FROM session_reviews
+//     WHERE session_id = $1
+//     `;
+//     const { rows: [sessionReview] } = await db.query(sql, [sessionReviewId]);
+//     return sessionReview;
+// };
 
 /* ====== My Reviews ====== */
