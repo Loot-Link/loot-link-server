@@ -7,7 +7,8 @@ import getUserFromToken from "#middleware/getUserFromToken";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 
-import usersRouter from "#api/users";
+import usersRouter from "#api/users"; 
+import friendsListRouter from '#api/friendslist';
 import gamesRouter from "#api/games";
 import sessionsRouter from "#api/sessions";
 import sessionMessagesRouter from "#api/sessionmessages";
@@ -27,6 +28,7 @@ app.use(cookieParser());
 
 
 app.use("/api/users", usersRouter);
+app.use("/api/friendslist", friendsListRouter);
 app.use("/api/games", gamesRouter);
 app.use("/api/sessions", sessionsRouter);
 app.use("/api/session-messages", sessionMessagesRouter);
