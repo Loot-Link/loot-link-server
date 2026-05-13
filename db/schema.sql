@@ -155,6 +155,7 @@ CREATE TABLE game_platforms (
 
 CREATE TABLE game_reviews (
   game_review_id SERIAL PRIMARY KEY,
+  review_title TEXT VARCHAR(20),
   game_review TEXT VARCHAR(800),
   game_id INT NOT NULL REFERENCES games(game_id) 
   game_title TEXT NOT NULL REFERENCES games(game_title) 

@@ -4,6 +4,7 @@ import db from '#db/client';
 
 export async function createGameReviews(
     gameReviewId,
+    reviewTitle,
     gameReview,
     gameId,
     gameTitle,
@@ -20,6 +21,8 @@ export async function createGameReviews(
     const sql = `
     INSERT INTO reviews (
         game_review_id,
+        review_title,
+        game_review,
         game_id,
         game_title,
         genre,
@@ -31,12 +34,14 @@ export async function createGameReviews(
         created_at,
         updated_at,
         rating_value)
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
     RETURNING *
     `;
     const { rows: [gameReviews] } = await db.query(
         sql,
         [gameReviewId,
+        reviewTitle,
+        gameReview,
         gameId,
         gameTitle,
         genre,

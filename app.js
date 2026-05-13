@@ -17,6 +17,8 @@ import xboxRouter from "#api/xbox";
 import battleNetRouter from "#api/battlenet";
 import connectionsRouter from "./api/connections.js";
 
+import gameReviewsRouter from "#api/game-reviews";
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan("dev"));
@@ -34,6 +36,7 @@ app.use("/api/battlenet", battleNetRouter);
 app.use("/api/steam", steamRouter);
 app.use("/api/xbox", xboxRouter);
 app.use("/api/connections", connectionsRouter);
+app.use('/api/game-reviews', gameReviewsRouter);
 
 
 app.use((err, req, res, next) => {
