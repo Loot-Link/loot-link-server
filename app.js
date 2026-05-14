@@ -57,5 +57,5 @@ app.use((err, req, res, next) => {
 
 app.use((err, req, res, next) => {
   console.error(err);
-  res.status(500).send("Sorry! Something went wrong.");
+  res.status(500).send({message:"Sorry! Something went wrong."});
 });

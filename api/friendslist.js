@@ -35,21 +35,17 @@ router.post('/request/:username', getUserFromToken, async (req, res, next)=>{
     try {
         const {username} = req.params
         const senderId = req.user.user_id;
-        const targetUsername = await getUserByUserName(username);
-        //Check for already pending requests here before sending new request
-        //const pendingRequests = await getPendingFriendRequests(req.user.user_id)
-        //const alreadyPending = pendingRequests.some(req => req.friend_id === receiver_id);
-        //if(targetUsername.user_id === pendingRequests.id){return res.status(bad)}
+        const targetUsername = await getUserByUserName(username); 
         if(!targetUsername){
             return res.status(404).send({message: "User not found. Check the spelling."})
         }
-
-        const receiverId  = targetUsername.user_id;
-        console.log(targetUsername.user_id);
-        const newRequest = await sendFriendRequest(senderId, receiverId);
-        if(!newRequest){
-            return res.status(409).send({message: "A request is already pending"});
+        //Gets list of user's pending requests, looks for if any of their id's matches user's
+        const pendingRequests = await getPendingFriendRequests(req.user.user_id);
+        const alreadyPending = pendingRequests.some(req => req.friend_id === targetUsername.user_id);
+        if(alreadyPending){
+            return res.status(409).send({message: "Pending request already exists"});
         }
+        const newRequest = await sendFriendRequest(senderId, receiverId);
         res.status(201).send(newRequest);
     } catch (err) {
         next(err);
