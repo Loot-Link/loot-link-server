@@ -45,7 +45,7 @@ router.post('/request/:username', getUserFromToken, async (req, res, next)=>{
         if(alreadyPending){
             return res.status(409).send({message: "Pending request already exists"});
         }
-        const newRequest = await sendFriendRequest(senderId, receiverId);
+        const newRequest = await sendFriendRequest(senderId, targetUsername.user_id);
         res.status(201).send(newRequest);
     } catch (err) {
         next(err);
@@ -67,7 +67,7 @@ router.post('/accept/:senderId', getUserFromToken, async (req, res, next)=>{
 });
 
 //User denies a friend request (Should also work for removing a friendship)
-router.delete('/deny/:senderId', getUserFromToken, async (req, res, next)=>{
+router.post('/deny/:senderId', getUserFromToken, async (req, res, next)=>{
     try {
         const senderId = Number(req.params.senderId);
         const receiverId = req.user.user_id;

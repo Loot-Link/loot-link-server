@@ -42,12 +42,18 @@ export async function getFriendList(userId){
   const { rows } = await db.query(sql, [userId]);
   return rows;
 }
-
+//This creates a new relationship if one does not exist, however, if a relationship does
+//already exist, then it UPDATES that relationship, and resets sender/receiver to most recent interaction
 export async function sendFriendRequest(senderId, receiverId){
   const sql = `
     INSERT INTO friendships (sender_id, receiver_id, status)
     VALUES ($1, $2, 'pending')
-    ON CONFLICT (sender_id, receiver_id) DO NOTHING
+    ON CONFLICT (sender_id, receiver_id) 
+    DO UPDATE SET
+        sender_id = EXCLUDED.sender_id,
+        receiver_id = EXCLUDED.receiver_id,
+        status = 'pending'
+    WHERE friendships.status = 'denied'
     RETURNING *;
   `;
   const { rows } = await db.query(sql, [senderId, receiverId]);
