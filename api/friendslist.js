@@ -7,7 +7,9 @@ import {
     getFriendList, 
     sendFriendRequest,
     acceptFriendRequest, 
-    denyFriendRequest} from "#db/queries/friendQuery";
+    denyFriendRequest,
+    getBlockList,
+    blockUser} from "#db/queries/friendQuery";
 
 import getUserFromToken from "#middleware/getUserFromToken";
 import { getUserByUserName } from "#db/queries/users";
@@ -25,6 +27,15 @@ router.get('/', getUserFromToken, async (req, res, next)=>{
 router.get('/requests', getUserFromToken, async (req, res, next)=>{
     try {
         const requests = await getPendingFriendRequests(req.user.user_id);
+        res.send(requests);
+    } catch (err) {
+        next(err);
+    }
+});
+//Get list of blocked users. 
+router.get('/blocklist', getUserFromToken, async (req, res, next)=>{
+    try {
+        const requests = await getBlockList(req.user_id);
         res.send(requests);
     } catch (err) {
         next(err);
@@ -76,5 +87,20 @@ router.post('/deny/:senderId', getUserFromToken, async (req, res, next)=>{
         res.status(200).send(denyRequest);
     } catch (err) {
         next(err);        
+    }
+});
+
+//User blocks another user 
+router.post('/blocklist/:receiverId', getUserFromToken, async (req, res, next)=>{
+    try {
+        //receiver = person to be blocked
+        const receiverId = Number(req.params.senderId);
+        //sender = person doing the blocking
+        const senderId = req.user.user_id;
+
+        const blockedPerson = await blockUser(senderId, receiverId);
+        res.status(200).send(blockedPerson);
+    } catch (err) {
+        next(err);
     }
 });

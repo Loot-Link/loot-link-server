@@ -90,3 +90,36 @@ export async function denyFriendRequest(senderId, receiverId){
   const { rows } = await db.query(sql, [senderId, receiverId]);
   return rows[0];
 }
+
+export async function blockUser(senderId, receiverId){
+    const sql = `
+    INSERT INTO friendships (sender_id, receiver_id, status)
+    VALUES ($1, $2, 'blocked')
+    ON CONFLICT (sender_id, receiver_id) 
+    DO UPDATE SET
+        status = 'blocked'
+    RETURNING *;
+    `;
+    const { rows } = await db.query(sql, [senderId, receiverId]);
+    return rows[0];
+}
+//Very similar to getpending and getfriends
+//get the  
+//This might actually need to be inverted depending on who I'm calling as "sender" and "receiver".
+//I think the sender for blocklist should be the user who clicks the block button. receiver is the one "blocked"
+export async function getBlockList(userId) {
+      const sql = `
+    SELECT u.user_id, u.username 
+    FROM friendships f
+    JOIN users u ON u.user_id = (
+      CASE
+        WHEN f.receiver_id = $1 THEN f.sender_id
+        ELSE f.receiver_id
+      END
+    )
+    WHERE (f.sender_id = $1 OR f.receiver_id = $1)
+    AND f.status = 'blocked';
+  `;
+  const { rows } = await db.query(sql, [userId]);
+  return rows;    
+}
