@@ -35,7 +35,8 @@ router.get('/requests', getUserFromToken, async (req, res, next)=>{
 //Get list of blocked users. 
 router.get('/blocklist', getUserFromToken, async (req, res, next)=>{
     try {
-        const requests = await getBlockList(req.user_id);
+        const requests = await getBlockList(req.user.user_id);
+        console.log("Blocklist API call: ", requests);
         res.send(requests);
     } catch (err) {
         next(err);
@@ -94,11 +95,12 @@ router.post('/deny/:senderId', getUserFromToken, async (req, res, next)=>{
 router.post('/blocklist/:receiverId', getUserFromToken, async (req, res, next)=>{
     try {
         //receiver = person to be blocked
-        const receiverId = Number(req.params.senderId);
+        const receiverId = Number(req.params.receiverId);
         //sender = person doing the blocking
         const senderId = req.user.user_id;
 
         const blockedPerson = await blockUser(senderId, receiverId);
+        console.log("Block user POST API call: ", blockedPerson);
         res.status(200).send(blockedPerson);
     } catch (err) {
         next(err);

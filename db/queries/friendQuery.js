@@ -101,12 +101,12 @@ export async function blockUser(senderId, receiverId){
     RETURNING *;
     `;
     const { rows } = await db.query(sql, [senderId, receiverId]);
+    console.log("BlockUser action: ", rows );
     return rows[0];
 }
-//Very similar to getpending and getfriends
-//get the  
-//This might actually need to be inverted depending on who I'm calling as "sender" and "receiver".
-//I think the sender for blocklist should be the user who clicks the block button. receiver is the one "blocked"
+//Very similar to getpending and getfriends 
+//Receiver = person to be blocked
+//Sender = Person doing the blocking = userId
 export async function getBlockList(userId) {
       const sql = `
     SELECT u.user_id, u.username 
@@ -121,5 +121,6 @@ export async function getBlockList(userId) {
     AND f.status = 'blocked';
   `;
   const { rows } = await db.query(sql, [userId]);
+  console.log("Get Block List Query return: ", rows);
   return rows;    
 }
