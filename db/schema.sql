@@ -3,8 +3,10 @@ DROP TABLE IF EXISTS session_users; --Depends on sessions & users
 DROP TABLE IF EXISTS session_messages; --Depends on sessions & users
 DROP TABLE IF EXISTS sessions; -- Depends on users
 DROP TABLE IF EXISTS friendships; --Depends on users
+DROP TABLE IF EXISTS game_reviews; --No current dependencies
 DROP TABLE IF EXISTS users; --Depends on roles
 DROP TABLE IF EXISTS platforms; --No current dependencies
+
 DROP TABLE IF EXISTS games; --No current dependencies
 DROP TABLE IF EXISTS roles; --No current dependencies
 
@@ -158,4 +160,25 @@ CREATE TABLE game_platforms (
   created_at TIMESTAMP NOT NULL DEFAULT NOW(),
 
   UNIQUE (game_id, platform_id)
+);
+
+-- ************************ Reviews TABLES ************************ -- 
+CREATE TABLE game_reviews (
+  game_review_id SERIAL PRIMARY KEY,
+  review_title TEXT,
+  game_review TEXT,
+  game_id INT NOT NULL REFERENCES games(game_id), 
+
+  --- User, rating and timestamp
+  user_id INT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  rating_value INT NOT NULL CHECK (rating_value IN (1, 2, 3, 4, 5)),
+  view_counter INT NOT NULL DEFAULT 0,
+
+  -- moderation / flagging
+  is_flagged BOOLEAN DEFAULT false,
+  flagged_at TIMESTAMP,
+  flagged_by INTEGER REFERENCES users(user_id),
+  flag_reason TEXT
 );
