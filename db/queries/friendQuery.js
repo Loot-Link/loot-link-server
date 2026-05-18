@@ -101,7 +101,6 @@ export async function blockUser(senderId, receiverId){
     RETURNING *;
     `;
     const { rows } = await db.query(sql, [senderId, receiverId]);
-    console.log("BlockUser action: ", rows );
     return rows[0];
 }
 //Very similar to getpending and getfriends 
@@ -121,6 +120,16 @@ export async function getBlockList(userId) {
     AND f.status = 'blocked';
   `;
   const { rows } = await db.query(sql, [userId]);
-  console.log("Get Block List Query return: ", rows);
   return rows;    
+}
+//User removes another from their block list
+export async function removeFromBlocklist(senderId, receiverId) {
+  const sql = `
+    DELETE FROM friendships 
+    WHERE receiver_id = $2 AND sender_id = $1
+    RETURNING *;
+    `;
+    const { rows } = await db.query(sql, [senderId, receiverId]);
+    console.log("Success if empty: ", rows[0]);
+    return rows[0];
 }

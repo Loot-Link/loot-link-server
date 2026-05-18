@@ -9,7 +9,8 @@ import {
     acceptFriendRequest, 
     denyFriendRequest,
     getBlockList,
-    blockUser} from "#db/queries/friendQuery";
+    blockUser,
+    removeFromBlocklist} from "#db/queries/friendQuery";
 
 import getUserFromToken from "#middleware/getUserFromToken";
 import { getUserByUserName } from "#db/queries/users";
@@ -101,6 +102,21 @@ router.post('/blocklist/:receiverId', getUserFromToken, async (req, res, next)=>
 
         const blockedPerson = await blockUser(senderId, receiverId);
         console.log("Block user POST API call: ", blockedPerson);
+        res.status(200).send(blockedPerson);
+    } catch (err) {
+        next(err);
+    }
+});
+
+router.delete('/blocklist/:receiverId', getUserFromToken, async (req, res, next)=>{
+    try {
+        //receiver = person to be unblocked
+        const receiverId = Number(req.params.receiverId);
+        //sender = person doing the unblocking
+        const senderId = req.user.user_id;
+
+        const blockedPerson = await removeFromBlocklist(senderId, receiverId);
+        console.log("unBlock user POST API call: ", blockedPerson);
         res.status(200).send(blockedPerson);
     } catch (err) {
         next(err);
