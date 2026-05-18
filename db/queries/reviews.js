@@ -3,57 +3,37 @@ import db from '#db/client';
 /* === Game Reviews === */
 
 export async function createGameReviews(
-    gameReviewId,
     reviewTitle,
     gameReview,
     gameId,
-    gameTitle,
-    genre,
-    category,
-    platformId,
-    gamePlatformId,
-    gamePlatforms,
-    userId,
-    createdAt,
-    updatedAt,
-    ratingValue
+    ratingValue,
+    userId
 ) {
     const sql = `
-    INSERT INTO reviews (
-        game_review_id,
+    INSERT INTO game_reviews (
         review_title,
         game_review,
         game_id,
-        game_title,
-        genre,
-        category,
-        platform_id,
-        game_platform_id,
-        game_platforms,
-        user_id,
-        created_at,
-        updated_at,
-        rating_value)
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+        rating_value,
+        user_id
+        )
+    VALUES ($1, $2, $3, $4, $5)
     RETURNING *
     `;
+    try {
     const { rows: [gameReviews] } = await db.query(
         sql,
-        [gameReviewId,
-        reviewTitle,
+        [reviewTitle,
         gameReview,
         gameId,
-        gameTitle,
-        genre,
-        category,
-        platformId,
-        gamePlatformId,
-        gamePlatforms,
-        userId,
-        createdAt,
-        updatedAt,
-        ratingValue]
+        ratingValue,
+        userId
+        ]
     );
+    } catch (e) {
+        console.error(e);
+        throw new Error("Failed to post review.")
+    }
 };
 
 export async function getGameReviews() {
@@ -83,6 +63,16 @@ export async function getGameReviewByGameId(gameId) {
     `;
     const { rows: [gameReveiws] } = await db.query(sql, [gameId]);
     return gameReviews;
+};
+
+export async function getMyReview(userId) {
+    const sql = `
+    SELECT *
+    FROM game_reviews
+    WHERE user_id = $1
+    `;
+    const { rows: [myGameReview] } = await db.query(sql, [userId]);
+    return myGameReview;
 };
 
 //recent reviews?

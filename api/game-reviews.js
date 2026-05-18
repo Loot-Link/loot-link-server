@@ -7,7 +7,8 @@ import {
     createGameReviews, 
     getGameReviews, 
     getGameReviewByGameId, 
-    getGameReviewById 
+    getGameReviewById, 
+    getMyReview
     } from '#db/queries/reviews';
 
 const gameReviewsRouter= express.Router();
@@ -43,35 +44,33 @@ gameReviewsRouter.use(requireUser);
 gameReviewsRouter.post('/', requireBody([
     'reviewTitle',
     'gameReview', 
-    'gameTitle', 
-    'genre', 
-    'category', 
-    // 'gamePlatforms', 
-    'ratingValue'
+    'gameId',
+    'ratingValue',
+    'userId'
 ]), async (req, res) => {
     const {
         reviewTitle,
         gameReview,
-        gameTitle,
-        genre,
-        category,
-        // gamePlatforms,
-        ratingValue
+        gameId,
+        ratingValue,
+        userId
     } = req.body;
 
     const gameReviews = await createGameReviews(
         reviewTitle,
         gameReview,
-        gameTitle,
-        genre,
-        category,
-        // gamePlatforms,
+        gameId,
         ratingValue,
-        req.user.id);
+        userId);
 
-    if (!req.user.id) {
-        return res.status(403).send('You must be signed in to write a review.');
-    }
+    // if (!req.user.id) {
+    //     return res.status(403).send('You must be signed in to write a review.');
+    // }
 
     res.status(201).send(gameReview);
 });
+
+// gameReviewsRouter.get('/myReviews', async (req, res) => {
+//     const myReviews = await getMyReview(req.user.id);
+//     res.send(myReviews);
+// });
