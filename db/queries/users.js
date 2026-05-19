@@ -50,6 +50,17 @@ export async function getUserById(id) {
   return user;
 }
 
+export async function getUserByUserName(username) {
+  const sql = `
+  SELECT *
+  FROM users
+  WHERE username = $1
+  `;
+  const { rows: [user]} = await db.query(sql, [username]);
+  return user;
+}
+
+
 export async function updateUserSteamId(userId, steamId) {
   const sql = `
     UPDATE users
