@@ -31,6 +31,7 @@ CREATE TABLE users (
   battle_tag TEXT,
   battle_net_region TEXT DEFAULT 'us',
   battle_net_connected_at TIMESTAMP,
+  psn_id TEXT UNIQUE,
   active BOOLEAN NOT NULL DEFAULT TRUE,
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW(),

@@ -41,3 +41,16 @@ A dedicated space for incoming and outgoing session invites. Keeps coordination 
 ## Vision
 
 Loot Link is built around the idea that gaming is better when it’s social, persistent, and easy to jump back into. Instead of losing track of sessions or people, everything stays connected—so you spend less time organizing and more time actually playing.
+
+## Updates by Adam
+
+**LFG Engine & Session Logic**
+1. Implemented Sessions allowing users to create, join, and browse live lobbies.
+2. Developed CreateSessionDialog to launch lobbies directly from the Games catalog.
+3. Added Quick Join functionality to the Sessions catalog for instant player matching.
+4. Built a SessionDetail to track player counts and lobby status in real-time.
+
+**Database & API Architecture**
+1. Expanded the SQL query layer to handle relational session data and player membership.
+2. Integrated Session-to-User bridging to ensure data integrity during lobby transitions.
+3. Standardized API response codes for lobby actions (201 Created, 400 Already Joined).
