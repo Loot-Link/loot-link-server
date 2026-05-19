@@ -6,7 +6,6 @@ import { createUser } from "#db/queries/users";
 import fs from "fs/promises";
 import { parse } from "csv-parse/sync";
 
-
 await db.connect();
 await seed();
 await db.end();
@@ -274,7 +273,45 @@ for (const f of friendships) {
 
 
 
+// ---------- game_reviews ----------
+const gameReviewsCsv = await fs.readFile(
+  "./db/seed-data/game_reviews_seed.csv",
+  "utf-8"
+);
 
+const gameReviews = parse(gameReviewsCsv, {
+  columns: true,
+  skip_empty_lines: true,
+});
 
+for (const review of gameReviews) {
+  await db.query(
+    `
+    INSERT INTO game_reviews (
+      review_title,
+      game_review,
+      game_id,
+      user_id,
+      rating_value,
+      view_counter
+    )
+    VALUES (
+      $1, $2, $3, $4, $5, $6
+    );
+    `,
+    [
+      review.review_title,
+      review.game_review,
+      Number(review.game_id),
+      Number(review.user_id),
+      Number(review.rating_value),
+      Number(review.view_counter),
+    ]
+  );
+}
 
 }
+
+
+
+

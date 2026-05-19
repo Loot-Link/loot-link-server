@@ -2,24 +2,30 @@ import express from "express";
 const router = express.Router();
 export default router;
 
-import fetch from "node-fetch";
-import { getSessionMessages, createSessionMessage, deleteSessionMessage } from "#db/queries/sessionmessages";
-
+import { 
+  getSessionMessages, 
+  createSessionMessage, 
+  deleteSessionMessage 
+} from "#db/queries/sessionmessages";
 import requireBody from "#middleware/requireBody";
-import { createToken } from "#utils/jwt";
+import requireUser from "#middleware/requireUser"; // Added
 
-
+/** GET /api/sessionmessages/:sessionId */
 router.get("/:sessionId", async (req, res) => {
-  const sessionMessages = await getSessionMessages(req.params.sessionId);
-  if (!sessionMessages) return res.status(404).send("Session ID not found.");
-  res.send(sessionMessages);
+  try {
+    const sessionMessages = await getSessionMessages(req.params.sessionId);
+    // Return empty array instead of 404 so the frontend doesn't crash on new lobbies
+    res.send(sessionMessages || []);
+  } catch (err) {
+    res.status(500).send("Error fetching messages");
+  }
 });
 
-router.post("/", async (req, res, next) => {
+// Added requireUser so we can safely access req.user.user_id
+router.post("/", requireUser, requireBody(["session_id", "message_text"]), async (req, res, next) => {
   try {
     const { session_id, message_text } = req.body;
-    //console.log(req.user);
-    const user_id = req.user.user_id;
+    const user_id = req.user.user_id; 
 
     const message = await createSessionMessage(
       session_id,
@@ -27,9 +33,9 @@ router.post("/", async (req, res, next) => {
       message_text
     );
 
-    res.status(201).send(message);
+    // Spread the user's name back so the chat UI shows it immediately
+    res.status(201).send({ ...message, username: req.user.username });
   } catch (err) {
     next(err);
   }
 });
-
