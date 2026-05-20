@@ -67,7 +67,7 @@ gameReviewsRouter.post('/', requireBody([
     //     return res.status(403).send('You must be signed in to write a review.');
     // }
 
-    res.status(201).send(gameReview);
+    res.status(201).json(gameReview);
 });
 
 // gameReviewsRouter.get('/myReviews', async (req, res) => {
