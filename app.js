@@ -7,17 +7,18 @@ import getUserFromToken from "#middleware/getUserFromToken";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 
-import usersRouter from "#api/users";
+import usersRouter from "#api/users"; 
+import friendsListRouter from '#api/friendslist';
 import gamesRouter from "#api/games";
 import sessionsRouter from "#api/sessions";
 import sessionMessagesRouter from "#api/sessionmessages";
+import gameReviewsRouter from "#api/gamereviews";
 
 import steamRouter from "#api/steam";
 import xboxRouter from "#api/xbox";
 import battleNetRouter from "#api/battlenet";
 import connectionsRouter from "./api/connections.js";
-
-import gameReviewsRouter from "#api/game-reviews";
+import psnRouter from "./api/playstation.js";
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -29,9 +30,12 @@ app.use(cookieParser());
 
 
 app.use("/api/users", usersRouter);
+app.use("/api/friendslist", friendsListRouter);
 app.use("/api/games", gamesRouter);
 app.use("/api/sessions", sessionsRouter);
 app.use("/api/session-messages", sessionMessagesRouter);
+app.use("/api/game-reviews", gameReviewsRouter);
+
 app.use("/api/battlenet", battleNetRouter);
 app.use("/api/steam", steamRouter);
 app.use("/api/xbox", xboxRouter);
@@ -58,5 +62,5 @@ app.use((err, req, res, next) => {
 
 app.use((err, req, res, next) => {
   console.error(err);
-  res.status(500).send("Sorry! Something went wrong.");
+  res.status(500).send({message:"Sorry! Something went wrong."});
 });

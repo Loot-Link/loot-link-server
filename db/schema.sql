@@ -1,13 +1,15 @@
-DROP TABLE IF EXISTS game_platforms CASCADE;
-DROP TABLE IF EXISTS session_users CASCADE;
-DROP TABLE IF EXISTS sessions CASCADE;
-DROP TABLE IF EXISTS session_messages CASCADE;
-DROP TABLE IF EXISTS game_reviews CASCADE;
-DROP TABLE IF EXISTS users CASCADE;
-DROP TABLE IF EXISTS platforms CASCADE;
-DROP TABLE IF EXISTS games CASCADE;
-DROP TABLE IF EXISTS roles;
--- DROP TABLE IF EXISTS session_reviews CASCADE;
+DROP TABLE IF EXISTS game_platforms; -- Depends on games & platforms
+DROP TABLE IF EXISTS session_users; --Depends on sessions & users
+DROP TABLE IF EXISTS session_messages; --Depends on sessions & users
+DROP TABLE IF EXISTS sessions; -- Depends on users
+DROP TABLE IF EXISTS friendships; --Depends on users
+DROP TABLE IF EXISTS game_reviews; --No current dependencies
+DROP TABLE IF EXISTS users; --Depends on roles
+DROP TABLE IF EXISTS platforms; --No current dependencies
+
+DROP TABLE IF EXISTS games; --No current dependencies
+DROP TABLE IF EXISTS roles; --No current dependencies
+
 
 -- ************************ Users TABLES ************************ -- 
 CREATE TABLE roles (
@@ -29,10 +31,20 @@ CREATE TABLE users (
   battle_tag TEXT,
   battle_net_region TEXT DEFAULT 'us',
   battle_net_connected_at TIMESTAMP,
+  psn_id TEXT UNIQUE,
   active BOOLEAN NOT NULL DEFAULT TRUE,
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW(),
   avatar_url TEXT
+);
+--See if I can simplify this to not use 3 user_id fields. Just Sender, receiver. Check for existing requests elsewhere  --to prevent duplicate rows. 
+CREATE TABLE friendships ( 
+  sender_id INTEGER REFERENCES users(user_id) ON DELETE CASCADE,
+  receiver_id INTEGER REFERENCES users(user_id) ON DELETE CASCADE,
+  status VARCHAR(20) DEFAULT 'pending',
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW(),
+  CONSTRAINT pk_friendships PRIMARY KEY (sender_id, receiver_id)
 );
 
 -- ************************ Sessions TABLES ************************ -- 
@@ -151,8 +163,7 @@ CREATE TABLE game_platforms (
   UNIQUE (game_id, platform_id)
 );
 
------- Reviews Tables ------
-
+-- ************************ Reviews TABLES ************************ -- 
 CREATE TABLE game_reviews (
   game_review_id SERIAL PRIMARY KEY,
   review_title TEXT,
@@ -163,7 +174,7 @@ CREATE TABLE game_reviews (
   user_id INT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
   created_at TIMESTAMP NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
-  rating_value INTEGER NOT NULL CHECK (rating_value BETWEEN 1 AND 5),
+  rating_value INT NOT NULL CHECK (rating_value IN (1, 2, 3, 4, 5)),
   view_counter INT NOT NULL DEFAULT 0,
 
   -- moderation / flagging
@@ -172,5 +183,3 @@ CREATE TABLE game_reviews (
   flagged_by INTEGER REFERENCES users(user_id),
   flag_reason TEXT
 );
-
-
