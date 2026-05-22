@@ -254,9 +254,9 @@ const friendships = [
 
 for (const f of friendships) {
   await db.query(`
-    INSERT INTO friendships (sender_id, receiver_id, status)
+    INSERT INTO friendships (user_id_1, user_id_2, status)
     VALUES ($1, $2, $3)
-    ON CONFLICT (sender_id, receiver_id) DO NOTHING
+    ON CONFLICT (user_id_1, user_id_2) DO NOTHING
   `, [f.u1, f.u2, f.status]);
 }
 
