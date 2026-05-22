@@ -7,7 +7,7 @@ export async function createGameReviews(
     gameReview,
     gameId,
     ratingValue,
-    userId
+    user_id
 ) {
     const sql = `
     INSERT INTO game_reviews (
@@ -27,7 +27,7 @@ export async function createGameReviews(
         gameReview,
         gameId,
         ratingValue,
-        userId
+        user_id
         ]
     );
     } catch (e) {

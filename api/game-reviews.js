@@ -45,15 +45,14 @@ gameReviewsRouter.post('/', requireBody([
     'reviewTitle',
     'gameReview', 
     'gameId',
-    'ratingValue',
-    'userId'
+    'ratingValue'
 ]), async (req, res) => {
+    const user_id = req.user.user_id
     const {
         reviewTitle,
         gameReview,
         gameId,
-        ratingValue,
-        userId
+        ratingValue
     } = req.body;
 
     const gameReviews = await createGameReviews(
@@ -61,11 +60,11 @@ gameReviewsRouter.post('/', requireBody([
         gameReview,
         gameId,
         ratingValue,
-        userId);
+        user_id);
 
-    // if (!req.user.id) {
-    //     return res.status(403).send('You must be signed in to write a review.');
-    // }
+    if (!user_id) {
+        return res.status(403).send('You must be signed in to write a review.');
+    }
 
     res.status(201).json(gameReview);
 });

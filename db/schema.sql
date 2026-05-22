@@ -163,7 +163,7 @@ CREATE TABLE game_reviews (
   user_id INT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
   created_at TIMESTAMP NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
-  rating_value TEXT NOT NULL,
+  rating_value INTEGER NOT NULL CHECK (rating_value BETWEEN 1 AND 5),
   view_counter INT NOT NULL DEFAULT 0,
 
   -- moderation / flagging
@@ -174,15 +174,3 @@ CREATE TABLE game_reviews (
 );
 
 
--- CREATE TABLE session_reviews (
---   session_review_id SERIAL PRIMARY KEY,
---   session_id INT NOT NULL REFERENCES sessions(session_id),
---   user_id INT NOT NULL REFERENCES users(user_id),
---   rating_value INT NOT NULL CHECK (rating_value IN (1, 2, 3, 4, 5)),
-
---   -- moderation / flagging
---   is_flagged BOOLEAN DEFAULT false,
---   flagged_at TIMESTAMP,
---   flagged_by INTEGER REFERENCES users(user_id),
---   flag_reason TEXT
--- );
