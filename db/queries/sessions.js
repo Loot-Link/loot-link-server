@@ -3,12 +3,9 @@ import bcrypt from "bcrypt";
 
 export async function getSessions(){
   const sql = `
-  SELECT
-    sessions.*,
-    games.game_title,
-    games.cover_image_url
-  FROM sessions
-  JOIN games ON sessions.game_id = games.game_id
+    SELECT sessions.*, games.game_title, games.cover_image_url
+    FROM sessions
+    JOIN games ON sessions.game_id = games.game_id
   `;
   const { rows: games } = await db.query(sql);
   return games;
@@ -16,12 +13,9 @@ export async function getSessions(){
 
 export async function getSessionById(session_id) {
   const sql = `
-    SELECT 
-      sessions.*, 
-      games.game_title, 
-      games.cover_image_url 
-    FROM sessions 
-    JOIN games ON sessions.game_id = games.game_id 
+    SELECT sessions.*, games.game_title, games.cover_image_url
+    FROM sessions
+    JOIN games ON sessions.game_id = games.game_id
     WHERE session_id = $1
   `;
   const { rows: [session] } = await db.query(sql, [session_id]);
@@ -30,34 +24,30 @@ export async function getSessionById(session_id) {
 
 export async function getSessionUsers(session_id) {
   const sql = `
-    SELECT 
-      session_users.membership_status,
-      session_users.is_host,
-      users.user_id,
-      users.username,
-      users.avatar_url,
-      users.xbox_gamertag
-    FROM session_users 
-    JOIN users ON session_users.user_id = users.user_id 
+    SELECT session_users.membership_status, session_users.is_host, users.user_id, users.username, users.avatar_url, users.xbox_gamertag
+    FROM session_users
+    JOIN users ON session_users.user_id = users.user_id
     WHERE session_id = $1
   `;
   const { rows } = await db.query(sql, [session_id]);
   return rows;
 }
 
+// MERGED: Destructures and inserts the is_private field cleanly
 export async function createSession(sessionData) {
-  const { game_id, host_user_id, session_title, session_description, max_users } = sessionData;
+  const { game_id, host_user_id, session_title, session_description, max_users, is_private } = sessionData;
   const sql = `
-    INSERT INTO sessions (game_id, host_user_id, session_title, session_description, max_users, created_by_user_id)
-    VALUES ($1, $2, $3, $4, $5, $2)
+    INSERT INTO sessions (game_id, host_user_id, session_title, session_description, max_users, created_by_user_id, is_private)
+    VALUES ($1, $2, $3, $4, $5, $2, $6)
     RETURNING *;
   `;
   const { rows: [session] } = await db.query(sql, [
-    game_id, 
-    host_user_id, 
-    session_title, 
-    session_description, 
-    max_users || 4
+    game_id,
+    host_user_id,
+    session_title,
+    session_description,
+    max_users || 4,
+    is_private ?? false // Defaults to false (public) if omitted
   ]);
   return session;
 }
@@ -71,21 +61,30 @@ export async function deleteSession(sessionId) {
 }
 
 export async function updateSession(sessionId, sessionData) {
-  const { session_title, session_description, max_users } = sessionData;
+  const { session_title, session_description, max_users, session_status } = sessionData;
   const sql = `
     UPDATE sessions 
-    SET session_title = $2, session_description = $3, max_users = $4, updated_at = NOW()
-    WHERE session_id = $1 
+    SET session_title = $2, 
+        session_description = $3, 
+        max_users = $4, 
+        session_status = $5, -- Updates your 'active' or 'locked' status values
+        updated_at = NOW()
+    WHERE session_id = $1
     RETURNING *;
   `;
+  
   const { rows: [updatedSession] } = await db.query(sql, [
-    sessionId, 
-    session_title, 
+    sessionId,           
+    session_title,       
     session_description, 
-    max_users || 4
+    max_users || 4,     
+    session_status || 'active' 
   ]);
+  
   return updatedSession;
 }
+
+
 
 export async function getSessionsByGameId(gameId) {
   const sql = `
@@ -105,9 +104,7 @@ export async function getSessionsByHostUserId(hostUserId) {
 
 export async function getSessionsByUserId(userId) {
   const sql = `
-    SELECT s.* FROM sessions s 
-    JOIN session_users su ON s.session_id = su.session_id 
-    WHERE su.user_id = $1;
+    SELECT s.* FROM sessions s JOIN session_users su ON s.session_id = su.session_id WHERE su.user_id = $1;
   `;
   const { rows: sessions } = await db.query(sql, [userId]);
   return sessions;
@@ -115,9 +112,7 @@ export async function getSessionsByUserId(userId) {
 
 export async function addUserToSession(sessionId, userId) {
   const sql = `
-    INSERT INTO session_users (session_id, user_id) 
-    VALUES ($1, $2) 
-    RETURNING *;
+    INSERT INTO session_users (session_id, user_id) VALUES ($1, $2) RETURNING *;
   `;
   const { rows: [sessionUser] } = await db.query(sql, [sessionId, userId]);
   return sessionUser;
@@ -125,9 +120,7 @@ export async function addUserToSession(sessionId, userId) {
 
 export async function removeUserFromSession(sessionId, userId) {
   const sql = `
-    DELETE FROM session_users 
-    WHERE session_id = $1 AND user_id = $2 
-    RETURNING *;
+    DELETE FROM session_users WHERE session_id = $1 AND user_id = $2 RETURNING *;
   `;
   const { rows: [removedSessionUser] } = await db.query(sql, [sessionId, userId]);
   return removedSessionUser;
