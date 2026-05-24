@@ -18,6 +18,7 @@ import {
 import requireBody from "#middleware/requireBody";
 import requireUser from "#middleware/requireUser";
 
+
 // 1. GET all sessions With Automated Player Count 
 router.get("/", async (req, res) => {
   try {
