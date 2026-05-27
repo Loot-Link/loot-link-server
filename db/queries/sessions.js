@@ -25,30 +25,45 @@ export async function getSessionById(session_id) {
 export async function getSessionUsers(session_id) {
   const sql = `
     SELECT session_users.membership_status, session_users.is_host, users.user_id, users.username, users.avatar_url, users.xbox_gamertag
-    FROM session_users
-    JOIN users ON session_users.user_id = users.user_id
-    WHERE session_id = $1
+    FROM session_users 
+    JOIN users ON session_users.user_id = users.user_id 
+    WHERE session_id = $1 
   `;
   const { rows } = await db.query(sql, [session_id]);
   return rows;
 }
 
-// MERGED: Destructures and inserts the is_private field cleanly
+// MATCHMAKING SCRIPT UPGRADE: Saves the initial matchmaking intake flag state
 export async function createSession(sessionData) {
-  const { game_id, host_user_id, session_title, session_description, max_users, is_private } = sessionData;
+  const { game_id, host_user_id, session_title, session_description, max_users, is_private, matchmaking_enabled, playstyle } = sessionData;
+  
   const sql = `
-    INSERT INTO sessions (game_id, host_user_id, session_title, session_description, max_users, created_by_user_id, is_private)
-    VALUES ($1, $2, $3, $4, $5, $2, $6)
+    INSERT INTO sessions (
+      game_id, 
+      host_user_id, 
+      session_title, 
+      session_description, 
+      max_users, 
+      created_by_user_id, 
+      is_private, 
+      matchmaking_enabled,
+      playstyle -- 1. Added the target column to the insertion statement layout
+    )
+    VALUES ($1, $2, $3, $4, $5, $2, $6, $7, $8) -- 2. Added placeholder variable parameter $8 here
     RETURNING *;
   `;
+  
   const { rows: [session] } = await db.query(sql, [
-    game_id,
-    host_user_id,
-    session_title,
-    session_description,
-    max_users || 4,
-    is_private ?? false // Defaults to false (public) if omitted
+    game_id,             // $1
+    host_user_id,         // $2
+    session_title,       // $3
+    session_description, // $4
+    max_users || 4,      // $5
+    is_private ?? false, // $6
+    matchmaking_enabled ?? false, // $7
+    playstyle || 'Casual' // $8 - Default to 'Casual' if not provided, ensuring the new column is always populated
   ]);
+  
   return session;
 }
 
@@ -60,31 +75,30 @@ export async function deleteSession(sessionId) {
   return deletedSession;
 }
 
+// MATCHMAKING SCRIPT UPGRADE: Updates dynamic status parameters and queue positions
 export async function updateSession(sessionId, sessionData) {
-  const { session_title, session_description, max_users, session_status } = sessionData;
+  const { session_title, session_description, max_users, session_status, matchmaking_enabled, playstyle } = sessionData;
   const sql = `
     UPDATE sessions 
     SET session_title = $2, 
         session_description = $3, 
         max_users = $4, 
-        session_status = $5, -- Updates your 'active' or 'locked' status values
+        session_status = $5,
+        matchmaking_enabled = $6, -- Hot-swaps queue availability live from the dashboard
         updated_at = NOW()
     WHERE session_id = $1
     RETURNING *;
   `;
-  
   const { rows: [updatedSession] } = await db.query(sql, [
-    sessionId,           
-    session_title,       
-    session_description, 
-    max_users || 4,     
-    session_status || 'active' 
+    sessionId,
+    session_title,
+    session_description,
+    max_users || 4,
+    session_status || 'active',
+    matchmaking_enabled ?? false
   ]);
-  
   return updatedSession;
 }
-
-
 
 export async function getSessionsByGameId(gameId) {
   const sql = `
