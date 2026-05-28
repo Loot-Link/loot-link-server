@@ -1,3 +1,5 @@
+DROP TABLE IF EXISTS notifications;
+DROP TABLE IF EXISTS notification_types;
 DROP TABLE IF EXISTS game_platforms; -- Depends on games & platforms
 DROP TABLE IF EXISTS session_users; --Depends on sessions & users
 DROP TABLE IF EXISTS session_messages; --Depends on sessions & users
@@ -9,6 +11,11 @@ DROP TABLE IF EXISTS platforms; --No current dependencies
 
 DROP TABLE IF EXISTS games; --No current dependencies
 DROP TABLE IF EXISTS roles; --No current dependencies
+
+
+
+
+
 
 
 -- ************************ Users TABLES ************************ -- 
@@ -75,7 +82,7 @@ CREATE TABLE session_users (
   session_id INT NOT NULL REFERENCES sessions(session_id) ON DELETE CASCADE,
   user_id INT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
 
-  membership_status TEXT NOT NULL DEFAULT 'joined',
+  membership_status TEXT NOT NULL DEFAULT 'invited',
   is_host BOOLEAN NOT NULL DEFAULT FALSE,
 
   invited_at TIMESTAMP,
@@ -143,7 +150,6 @@ CREATE TABLE games (
   updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
-
 CREATE TABLE platforms (
   platform_id SERIAL PRIMARY KEY,
   platform_name TEXT NOT NULL UNIQUE, -- steam, xbox, psn
@@ -162,6 +168,9 @@ CREATE TABLE game_platforms (
 
   UNIQUE (game_id, platform_id)
 );
+
+
+
 
 -- ************************ Reviews TABLES ************************ -- 
 CREATE TABLE game_reviews (
@@ -183,3 +192,35 @@ CREATE TABLE game_reviews (
   flagged_by INTEGER REFERENCES users(user_id),
   flag_reason TEXT
 );
+
+
+
+
+-- ************************ Notifications TABLES ************************ -- 
+CREATE TABLE notification_types (
+  notification_type_id SERIAL PRIMARY KEY,
+
+  type_key TEXT UNIQUE NOT NULL,
+  display_name TEXT NOT NULL,
+
+  category TEXT,
+  icon TEXT,
+
+  active BOOLEAN DEFAULT TRUE,
+
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE notifications (
+  notification_id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+
+  notification_type TEXT,
+  notification_type_id INTEGER REFERENCES notification_types(notification_type_id),
+  notification_text TEXT NOT NULL,
+
+  is_read BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP DEFAULT NOW(),
+  read_at TIMESTAMP
+);
+
