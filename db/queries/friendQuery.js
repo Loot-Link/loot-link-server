@@ -20,7 +20,7 @@ export async function getPendingFriendRequests(userId){
         END
         )
     WHERE (f.user_id_1 = $1 OR f.user_id_2 = $1)
-    AND f.status = 'pending'
+    AND f.status = 'pending';
   `;
   const { rows } = await db.query(sql, [userId]);
   return rows;
@@ -44,10 +44,10 @@ export async function getFriendList(userId){
 }
 //This creates a new relationship if one does not exist, however, if a relationship does
 //already exist, then it UPDATES that relationship, and resets sender/receiver to most recent interaction
-export async function sendFriendRequest(userId1, userId2){
+export async function sendFriendRequest(userId1, userId2, actorId){
   const sql = `
-    INSERT INTO friendships (user_id_1, user_id_2, status)
-    VALUES ($1, $2, 'pending')
+    INSERT INTO friendships (user_id_1, user_id_2, status, actor_id)
+    VALUES ($1, $2, 'pending', $3)
     ON CONFLICT (user_id_1, user_id_2) 
     DO UPDATE SET
         user_id_1 = EXCLUDED.user_id_1,
@@ -56,7 +56,7 @@ export async function sendFriendRequest(userId1, userId2){
     WHERE friendships.status = 'denied'
     RETURNING *;
   `;
-  const { rows } = await db.query(sql, [userId1, userId2]);
+  const { rows } = await db.query(sql, [userId1, userId2, actorId]);
   return rows[0];
 }
 
@@ -65,14 +65,15 @@ export async function acceptFriendRequest(userId1, userId2, actorId){
     UPDATE friendships
     SET 
       status = 'accepted',
-      updated_at = NOW()
+      updated_at = NOW(),
+      actor_id = $3
     WHERE 
       user_id_1 = $1 AND 
       user_id_2 = $2 AND
       STATUS = 'pending'
     RETURNING *;
   `;
-  const { rows } = await db.query(sql, [userId1, userId2]);
+  const { rows } = await db.query(sql, [userId1, userId2, actorId]);
   return rows[0];
 }
 
@@ -81,26 +82,28 @@ export async function denyFriendRequest(userId1, userId2, actorId){
     UPDATE friendships
     SET
         status = 'denied',
-        updated_at = NOW()
+        updated_at = NOW(),
+        actor_id = $3
     WHERE 
         user_id_1 = $1 AND
         user_id_2 = $2
     RETURNING *; 
   `;
-  const { rows } = await db.query(sql, [userId1, userId2]);
+  const { rows } = await db.query(sql, [userId1, userId2, actorId]);
   return rows[0];
 }
 
 export async function blockUser(userId1, userId2, actorId){
     const sql = `
-    INSERT INTO friendships (user_id_1, user_id_2, status)
-    VALUES ($1, $2, 'blocked')
+    INSERT INTO friendships (user_id_1, user_id_2, status, actor_id)
+    VALUES ($1, $2, 'blocked', $3)
     ON CONFLICT (user_id_1, user_id_2) 
     DO UPDATE SET
-        status = 'blocked'
+        status = 'blocked',
+        actor_id = EXCLUDED.actor_id
     RETURNING *;
     `;
-    const { rows } = await db.query(sql, [userId1, userId2]);
+    const { rows } = await db.query(sql, [userId1, userId2, actorId]);
     return rows[0];
 }
 //Very similar to getpending and getfriends 
@@ -116,7 +119,7 @@ export async function getBlockList(userId) {
         ELSE f.user_id_2
       END
     )
-    WHERE f.actor_id = $1 AND f.status = 'blocked';
+    WHERE f.actor_id = $1 AND f.status = 'blocked'
     AND f.status = 'blocked';
   `;
   const { rows } = await db.query(sql, [userId]);
