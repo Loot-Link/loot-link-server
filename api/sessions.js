@@ -116,16 +116,46 @@ router.post("/:sessionId/join", requireUser, async (req, res) => {
   }
 });
 
-// 7. DELETE Close Session
+// 7. DELETE Close Session (Updated with Discord Bot Cleanup Synchronization)
 router.delete("/:sessionId", requireUser, async (req, res) => {
   try {
     const { sessionId } = req.params;
+    
+    // 1. Fetch the full session profile first to extract description strings before database wipe
+    const sessionDetailsSql = `SELECT * FROM sessions WHERE session_id = $1;`;
+    const { rows: [session] } = await db.query(sessionDetailsSql, [sessionId]);
+    if (!session) return res.status(404).send("Session not found");
+
+    if (Number(session.host_user_id) !== Number(req.user.user_id)) {
+      return res.status(403).send("Only the lobby host can close this session");
+    }
+
+    // 2. DISCORD BOT CLEANUP MODULE: Parse description out for active bot link tags
+    if (session.session_description && session.session_description.includes("[DISCORD_LINK]:")) {
+  try {
+    const { deleteTemporaryVoiceChannel } = await import("#utils/discordBot");
+        
+        // Split out description and isolate your target voice room ID string parameters
+        const urlPart = session.session_description.split("\n\n[DISCORD_LINK]:")[1] || "";
+    const channelIdMatch = urlPart.match(/\d+$/); // Extracts only the pure sequence of numbers from the path
+    
+    if (channelIdMatch) {
+      const pureChannelId = channelIdMatch[0];
+      await deleteTemporaryVoiceChannel(pureChannelId); // Signals the API to wipe the channel out
+    }
+  } catch (botErr) {
+    console.error("Discord API room sweep bypassed:", botErr.message);
+  }
+}
+
+    // 3. Clear your Postgres application keys cleanly
     await db.query("DELETE FROM session_messages WHERE session_id = $1;", [sessionId]);
     await db.query("DELETE FROM session_users WHERE session_id = $1;", [sessionId]);
+    
     await deleteSession(sessionId);
-    res.send({ message: "Session successfully closed" });
+    res.send({ message: "Session and companion voice channel successfully closed" });
   } catch (err) {
-    res.status(500).send("Error deleting session");
+    res.status(500).send("Error deleting session and cleaning up channels");
   }
 });
 
