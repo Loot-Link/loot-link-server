@@ -310,6 +310,37 @@ for (const review of gameReviews) {
   );
 }
 
+// seed notification types
+await db.query(`
+  INSERT INTO notification_types
+  (type_key, display_name, category, icon)
+
+  VALUES
+  ('friend_request', 'Friend Request', 'social', 'UserPlus'),
+  ('friend_accepted', 'Friend Accepted', 'social', 'Users'),
+
+  ('session_invite', 'Session Invite', 'sessions', 'Gamepad2'),
+  ('session_starting', 'Session Starting Soon', 'sessions', 'Clock3'),
+  ('added_to_session', 'Added To Session', 'sessions', 'Users'),
+  ('removed_from_session', 'Removed From Session', 'sessions', 'UserMinus'),
+
+  ('friend_online', 'Friend Online', 'social', 'Wifi'),
+  ('friend_logged_in', 'Friend Logged In', 'social', 'MonitorUp'),
+
+  ('review_reply', 'Review Reply', 'reviews', 'MessageSquare'),
+  ('review_liked', 'Review Liked', 'reviews', 'Heart'),
+
+  ('achievement_unlocked', 'Achievement Unlocked', 'games', 'Trophy'),
+  ('rare_achievement', 'Rare Achievement', 'games', 'Medal'),
+
+  ('direct_message', 'Direct Message', 'messages', 'Send'),
+  ('mentioned_in_chat', 'Mentioned In Chat', 'messages', 'AtSign'),
+
+  ('system_alert', 'System Alert', 'system', 'Bell'),
+  ('maintenance_notice', 'Maintenance Notice', 'system', 'Wrench'),
+  ('platform_connected', 'Platform Connected', 'system', 'Plug');
+`);
+
 }
 
 

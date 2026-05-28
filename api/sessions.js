@@ -10,6 +10,14 @@ import {
   addUserToSession,
   getSessionsByUserId 
 } from "#db/queries/sessions";
+
+import { 
+  createNotification, 
+  getMyNotifications,
+  markNotificationAsRead
+   
+} from "#db/queries/notifications";
+
 import requireBody from "#middleware/requireBody";
 import requireUser from "#middleware/requireUser";
 
@@ -29,6 +37,7 @@ router.get("/user/me", requireUser, async (req, res) => {
   }
 });
 
+
 // 3. GET Session Details (Combined Logic)
 // Standardized to :sessionId to match your coworker's frontend and README
 router.get("/:sessionId", async (req, res) => {
@@ -44,6 +53,7 @@ router.get("/:sessionId", async (req, res) => {
   }
 });
 
+
 // 4. GET Session Users (Coworker's specific endpoint)
 router.get("/:sessionId/users", async (req, res) => {
   try {
@@ -54,6 +64,7 @@ router.get("/:sessionId/users", async (req, res) => {
     res.status(500).send("Error fetching session users");
   }
 });
+
 
 // 5. POST Create Session (Your Logic)
 router.post("/", requireUser, requireBody(["game_id", "session_title"]), async (req, res) => {
@@ -71,7 +82,7 @@ router.post("/", requireUser, requireBody(["game_id", "session_title"]), async (
 });
 
 // 6. POST Join Session (Your Logic)
-// Updated to :sessionId for consistency
+// Updated to :sessionId for consistency - EMJ this only adds YOU to the session
 router.post("/:sessionId/join", requireUser, async (req, res) => {
   try {
     const sessionUser = await addUserToSession(req.params.sessionId, req.user.user_id);
@@ -79,5 +90,33 @@ router.post("/:sessionId/join", requireUser, async (req, res) => {
   } catch (err) {
     if (err.code === "23505") return res.status(400).send("Already in session");
     res.status(500).send("Error joining session");
+  }
+});
+
+
+//Add New User to Session - EMJ
+router.post("/:sessionId/addUser", requireUser, async (req, res) => {
+  try {
+    const sessionUser = await addUserToSession(
+      req.params.sessionId,
+      req.body.user_id
+    );
+
+
+  const session = await getSessionById(req.params.sessionId);
+  try {
+    await createNotification(
+      req.body.user_id,
+      3,
+      `${req.user.username} invited you to a session: ${session.session_title}`
+    );
+  } catch (notificationErr) {
+    console.error("Notification failed:", notificationErr);
+  }
+
+    res.status(201).send(sessionUser);
+  } catch (err) {
+    if (err.code === "23505") return res.status(400).send("user Already in session");
+    res.status(500).send("Error adding user to session");
   }
 });
