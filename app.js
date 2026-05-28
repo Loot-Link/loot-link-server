@@ -19,6 +19,8 @@ import xboxRouter from "#api/xbox";
 import battleNetRouter from "#api/battlenet";
 import connectionsRouter from "./api/connections.js";
 import psnRouter from "./api/playstation.js";
+import notficationsRouter from "./api/notifications.js";
+
 
 
 app.use(express.json());
@@ -27,8 +29,6 @@ app.use(morgan("dev"));
 app.use(cors());
 app.use(getUserFromToken); 
 app.use(cookieParser());
-
-
 
 app.use("/api/users", usersRouter);
 app.use("/api/friendslist", friendsListRouter);
@@ -42,6 +42,7 @@ app.use("/api/steam", steamRouter);
 app.use("/api/xbox", xboxRouter);
 app.use("/api/connections", connectionsRouter);
 app.use("/api/playstation", psnRouter);
+app.use("/api/notifications", notficationsRouter);
 
 
 app.use((err, req, res, next) => {

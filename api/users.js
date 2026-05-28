@@ -8,6 +8,17 @@ import { createToken } from "#utils/jwt";
 import { getUserById } from "#db/queries/users";
 import getUserFromToken from "#middleware/getUserFromToken";
 
+
+
+
+router.use(getUserFromToken);
+
+
+
+
+
+
+//Currently just for home page?
 router.get("/",  async (req, res) => {
   const users = await getUsers();
   users.forEach(user => delete user.password);
@@ -20,6 +31,28 @@ router.get("/",  async (req, res) => {
   res.send(result);
   // console.log("REQ.USER:", req.user);
 });
+
+
+//Users for dropdown
+router.get("/dropdown",  async (req, res) => {
+  const users = await getUsers();
+  users.forEach(user => delete user.password);
+
+  let result = users;
+  
+  if (req.user?.role_id === 1) {
+    result = users;
+  } else {
+    result = users.filter(
+      user => user.user_id != req.user.user_id
+    );
+  }
+  
+  res.send(result);
+  console.log("dropdown REQ.USER:", req.user);
+});
+
+
 
 
 
@@ -76,9 +109,7 @@ router.post(
 );
 
 
-
 //Get ME - my user info
-router.use(getUserFromToken);
 router.use((req, res, next) => {
   if (!req.user) return res.status(401).send("Unauthorized");
   next();

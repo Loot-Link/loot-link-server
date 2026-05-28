@@ -13,6 +13,14 @@ import {
   removeUserFromSession,
   updateSession 
 } from "#db/queries/sessions";
+
+import { 
+  createNotification, 
+  getMyNotifications,
+  markNotificationAsRead
+   
+} from "#db/queries/notifications";
+
 import requireBody from "#middleware/requireBody";
 import requireUser from "#middleware/requireUser";
 
