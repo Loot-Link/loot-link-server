@@ -15,13 +15,10 @@ const gameReviewsRouter= express.Router();
 export default gameReviewsRouter;
 
 /* ====== Game Reviews ====== */
-gameReviewsRouter.get('/', async (req, res) => {
-    const gameReviews = await getGameReviews();
-    res.send(gameReviews);
-});
 
-gameReviewsRouter.param('id', async (req, res, next, id) => {
-    const gameReview = await getGameReviewById(id);
+// Register param handler FIRST
+gameReviewsRouter.param('id', async (req, res, next, game_review_id) => {
+    const gameReview = await getGameReviewById(game_review_id);
     if (!gameReview) {
         return res.status(404).send('Review not found');
     }
@@ -30,13 +27,20 @@ gameReviewsRouter.param('id', async (req, res, next, id) => {
     next();
 });
 
-gameReviewsRouter.get('/:id', (req, res) => {
-    res.send(gameReview);
+// Then specific routes that use the param
+gameReviewsRouter.get('/:id/games', async (req, res) => {
+    const game = await getGameReviewByGameId(req.gameReview.game_id);
+    res.send(game);
 });
 
-gameReviewsRouter.get('/:id/games', async (req, res) => {
-    const gameReview = await getGameReviewByGameId(req.games.id);
-    res.send(gameReview);
+gameReviewsRouter.get('/:id', (req, res) => {
+    res.send(req.gameReview);
+});
+
+// Then the list route (least specific)
+gameReviewsRouter.get('/', async (req, res) => {
+    const gameReviews = await getGameReviews();
+    res.send(gameReviews);
 });
 
 gameReviewsRouter.use(requireUser);
@@ -46,7 +50,7 @@ gameReviewsRouter.post('/', requireBody([
     'gameReview', 
     'gameId',
     'ratingValue'
-]), async (req, res) => {
+]), async (req, res, next) => {
     const user_id = req.user.user_id
     const {
         reviewTitle,
@@ -55,18 +59,23 @@ gameReviewsRouter.post('/', requireBody([
         ratingValue
     } = req.body;
 
-    const gameReviews = await createGameReviews(
-        reviewTitle,
-        gameReview,
-        gameId,
-        ratingValue,
-        user_id);
-
     if (!user_id) {
         return res.status(403).send('You must be signed in to write a review.');
     }
 
-    res.status(201).json(gameReview);
+    try {
+        const newGameReview = await createGameReviews(
+            reviewTitle,
+            gameReview,
+            gameId,
+            ratingValue,
+            user_id
+        );
+
+        res.status(201).json(newGameReview);
+    } catch (err) {
+        next(err);
+    }
 });
 
 // gameReviewsRouter.get('/myReviews', async (req, res) => {

@@ -16,30 +16,39 @@ export async function createGameReviews(
         game_id,
         rating_value,
         user_id
-        )
+    )
     VALUES ($1, $2, $3, $4, $5)
     RETURNING *
     `;
+
     try {
-    const { rows: [gameReviews] } = await db.query(
-        sql,
-        [reviewTitle,
-        gameReview,
-        gameId,
-        ratingValue,
-        user_id
-        ]
-    );
+        const { rows: [gameReviewRow] } = await db.query(
+            sql,
+            [
+                reviewTitle,
+                gameReview,
+                gameId,
+                ratingValue,
+                user_id
+            ]
+        );
+        return gameReviewRow;
     } catch (e) {
         console.error(e);
-        throw new Error("Failed to post review.")
+        throw new Error("Failed to post review.");
     }
 };
 
 export async function getGameReviews() {
     const sql = `
-    SELECT *
+    SELECT
+        game_reviews.*,
+        games.game_title,
+        games.cover_image_url,
+        users.username
     FROM game_reviews
+    INNER JOIN games ON games.game_id = game_reviews.game_id
+    INNER JOIN users ON users.user_id = game_reviews.user_id
     `;
     const { rows: gameReviews } = await db.query(sql);
     return gameReviews;
@@ -47,11 +56,18 @@ export async function getGameReviews() {
 
 export async function getGameReviewById(gameReviewId) {
     const sql = `
-    SELECT *
+    SELECT
+        game_reviews.*,
+        games.game_title,
+        games.cover_image_url,
+        users.username
     FROM game_reviews
+    INNER JOIN games ON games.game_id = game_reviews.game_id
+    INNER JOIN users ON users.user_id = game_reviews.user_id
     WHERE game_review_id = $1
     `;
-    const { rows: [gameReview] } = await db.query(sql, gameReviewId);
+    const { rows: [gameReview] } = await db.query(sql, [gameReviewId]);
+    return gameReview;
 }
 
 export async function getGameReviewByGameId(gameId) {
@@ -61,8 +77,8 @@ export async function getGameReviewByGameId(gameId) {
     JOIN games ON game_reviews.game_id = games.game_id
     WHERE games.game_id = $1
     `;
-    const { rows: [gameReveiws] } = await db.query(sql, [gameId]);
-    return gameReviews;
+    const { rows: [game] } = await db.query(sql, [gameId]);
+    return game;
 };
 
 export async function getMyReview(userId) {
@@ -71,8 +87,8 @@ export async function getMyReview(userId) {
     FROM game_reviews
     WHERE user_id = $1
     `;
-    const { rows: [myGameReview] } = await db.query(sql, [userId]);
-    return myGameReview;
+    const { rows: myGameReviews } = await db.query(sql, [userId]);
+    return myGameReviews;
 };
 
 //recent reviews?
