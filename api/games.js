@@ -122,7 +122,7 @@ router.get("/populate-images", async (req, res) => {
     const match = igdbData[0];
     // const imageUrl = match?.cover?.url ? "https:" + match.cover.url : null;
     const imageUrl = match?.cover?.url
-      ? "https:" + match.cover.url.replace("t_thumb", "t_cover_big")
+      ? "https:" + match.cover.url.replace("t_thumb", "t_1080p")
       : null;
 
 
