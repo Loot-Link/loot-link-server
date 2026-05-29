@@ -5,6 +5,9 @@ Now it auto-restarts whenever you save a file
 http://localhost:3000/api/games/populate-images
 npm run db:reset
 
+git checkout main
+git pull origin main
+
 xbl emj api key 
 05203028-7708-4538-8499-dffda1f36613
 
