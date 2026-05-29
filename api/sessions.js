@@ -102,7 +102,6 @@ router.post("/:sessionId/addUser", requireUser, async (req, res) => {
       req.body.user_id
     );
 
-
   const session = await getSessionById(req.params.sessionId);
   try {
     await createNotification(
