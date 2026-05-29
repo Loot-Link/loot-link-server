@@ -2,7 +2,7 @@ import express from "express";
 const app = express();
 export default app;
 
-import morgan from "morgan";
+// import morgan from "morgan"; // Disabled due to CommonJS/ESM compatibility issue
 import getUserFromToken from "#middleware/getUserFromToken";
 import cors from "cors";
 import cookieParser from "cookie-parser";
@@ -12,7 +12,7 @@ import friendsListRouter from '#api/friendslist';
 import gamesRouter from "#api/games";
 import sessionsRouter from "#api/sessions";
 import sessionMessagesRouter from "#api/sessionmessages";
-import gameReviewsRouter from "#api/gamereviews";
+import gameReviewsRouter from "#api/game-reviews";
 
 import steamRouter from "#api/steam";
 import xboxRouter from "#api/xbox";
@@ -22,10 +22,9 @@ import psnRouter from "./api/playstation.js";
 import notficationsRouter from "./api/notifications.js";
 
 
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(morgan("dev"));
+// app.use(morgan("dev")); // Disabled due to CommonJS/ESM compatibility issue
 app.use(cors());
 app.use(getUserFromToken); 
 app.use(cookieParser());

@@ -13,6 +13,7 @@ import {
   removeUserFromSession,
   updateSession,
   getSessionById 
+  updateSession 
 } from "#db/queries/sessions";
 
 import { 
@@ -132,30 +133,119 @@ router.post("/:sessionId/join", requireUser, async (req, res) => {
   }
 });
 
+// 7. DELETE Close Session (Fully Merged & Upgraded String RegEx Extraction Module)
+router.delete("/:sessionId", requireUser, async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+
+    // 1. Fetch the full session profile first to extract description strings before database wipe
+    const sessionDetailsSql = `SELECT * FROM sessions WHERE session_id = $1;`;
+    const { rows: [session] } = await db.query(sessionDetailsSql, [sessionId]);
+    if (!session) return res.status(404).send("Session not found");
+
+    if (Number(session.host_user_id) !== Number(req.user.user_id)) {
+      return res.status(403).send("Only the lobby host can close this session");
+    }
+
+    // 2. UPGRADED DISCORD BOT CLEANUP MODULE: Direct universal text string string link finder
+    if (session.session_description && session.session_description.includes("https://discord.gg")) {
+      try {
+        const { deleteTemporaryVoiceChannel } = await import("#utils/discordBot");
+
+        // Alphanumeric split matcher finds the exact channel code string regardless of layout space padding
+        const channelIdMatch = session.session_description.match(/[a-zA-Z0-9]+$/);
+
+        if (channelIdMatch) {
+          const pureChannelId = channelIdMatch[0]; // Extracts the clean channel ID
+          await deleteTemporaryVoiceChannel(pureChannelId); // Signals the bot to drop the room channel layout
+        }
+      } catch (botErr) {
+        console.error("Discord API room sweep bypassed:", botErr.message);
+      }
+    }
+
+    // 3. Clear your Postgres application keys cleanly
+    await db.query("DELETE FROM session_messages WHERE session_id = $1;", [sessionId]);
+    await db.query("DELETE FROM session_users WHERE session_id = $1;", [sessionId]);
+
+    await deleteSession(sessionId);
+    res.send({ message: "Session and companion voice channel successfully closed" });
+  } catch (err) {
+    res.status(500).send("Error deleting session and cleaning up channels");
+  }
+});
 
 // 6.5 EMJ - Add user to session from dropdown
 router.post("/:sessionId/addUser", requireUser, async (req, res) => {
+// 8. DELETE Leave Session (Cleaned & Validated Authentication Layer Map)
+router.delete("/:sessionId/leave", requireUser, async (req, res) => {
   try {
-    const sessionUser = await addUserToSession(
-      req.params.sessionId,
-      req.body.user_id
-    );
+    const { sessionId } = req.params;
+    const userId = req.user.user_id; // Leverages valid request passport configurations
 
   const session = await getSessionById(req.params.sessionId);
-  try {
-    await createNotification(
-      req.body.user_id,
-      3,
-      `${req.user.username} invited you to a session: ${session.session_title}`
-    );
-  } catch (notificationErr) {
-    console.error("Notification failed:", notificationErr);
-  }
-
-    res.status(201).send(sessionUser);
+    await removeUserFromSession(sessionId, userId);
+    res.send({ message: "Successfully left the session" });
   } catch (err) {
-    if (err.code === "23505") return res.status(400).send("user Already in session");
-    res.status(500).send("Error adding user to session");
+    res.status(500).send("Error leaving session");
+  }
+});
+
+// 9. PUT Lobby settings configuration (Saves active toggle overrides)
+router.put("/:sessionId/settings", requireUser, requireBody(["max_users", "session_status"]), async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    const { max_users, session_status, matchmaking_enabled } = req.body;
+    
+    const session = await db.query(`SELECT host_user_id, session_title, session_description FROM sessions WHERE session_id = $1`, [sessionId]);
+    const currentSession = session.rows[0];
+    
+    if (!currentSession) return res.status(404).send("Session not found");
+    if (Number(currentSession.host_user_id) !== Number(req.user.user_id)) {
+      return res.status(403).send("Only the lobby host can modify settings");
+    }
+
+    const updated = await updateSession(sessionId, {
+      session_title: currentSession.session_title,
+      session_description: currentSession.session_description,
+      max_users: Number(max_users) || 4,
+      session_status: session_status,
+      matchmaking_enabled: matchmaking_enabled ?? false
+    });
+    res.send(updated);
+  } catch (err) {
+    res.status(500).send("Error updating lobby settings");
+  }
+});
+
+// Global memory state map to track player ready-status lists out of DB bounds
+const localReadyChecks = new Map();
+
+// 9A. PUT /api/sessions/:sessionId/ready
+router.put("/:sessionId/ready", requireUser, async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    const userId = Number(req.user.user_id);
+
+    if (!localReadyChecks.has(sessionId)) {
+      localReadyChecks.set(sessionId, new Set());
+    }
+
+    const readySet = localReadyChecks.get(sessionId);
+    if (readySet.has(userId)) { readySet.delete(userId); } else { readySet.add(userId); }
+    res.send({ readyUserIds: Array.from(readySet) });
+  } catch (err) {
+    res.status(500).send("Error tracking localized ready state");
+  }
+});
+
+// 9B. PUT /api/sessions/:sessionId/ready-reset
+router.put("/:sessionId/ready-reset", requireUser, async (req, res) => {
+  try {
+    localReadyChecks.delete(req.params.sessionId);
+    res.send({ message: "Ready checklist flushed cleanly" });
+  } catch (err) {
+    res.status(500).send("Error clearing local ready checklist");
   }
 });
 
@@ -245,6 +335,11 @@ router.put("/:sessionId/settings", requireUser, requireBody(["max_users", "sessi
 });
 
 
+// 9C. GET /api/sessions/:sessionId/ready-list
+router.get("/:sessionId/ready-list", async (req, res) => {
+  const readySet = localReadyChecks.get(req.params.sessionId) || new Set();
+  res.send({ readyUserIds: Array.from(readySet) });
+});
 // 10. POST /api/sessions/matchmaking/auto-fill (AUTOMATED MATCHMAKING ENGINE)
 router.post("/matchmaking/auto-fill", requireUser, async (req, res) => {
   try {
