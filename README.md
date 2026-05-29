@@ -8,6 +8,8 @@ npm run db:reset
 git checkout main
 git pull origin main
 
+node --env-file=.env scripts/populateGamesFromIgdb.js
+
 xbl emj api key 
 05203028-7708-4538-8499-dffda1f36613
 

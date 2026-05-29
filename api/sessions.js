@@ -205,21 +205,6 @@ router.delete("/:sessionId", requireUser, async (req, res) => {
   }
 });
 
-// 6.5 EMJ - Add user to session from dropdown
-router.post("/:sessionId/addUser", requireUser, async (req, res) => {
-// 8. DELETE Leave Session (Cleaned & Validated Authentication Layer Map)
-router.delete("/:sessionId/leave", requireUser, async (req, res) => {
-  try {
-    const { sessionId } = req.params;
-    const userId = req.user.user_id; // Leverages valid request passport configurations
-
-  const session = await getSessionById(req.params.sessionId);
-    await removeUserFromSession(sessionId, userId);
-    res.send({ message: "Successfully left the session" });
-  } catch (err) {
-    res.status(500).send("Error leaving session");
-  }
-});
 
 // 9. PUT Lobby settings configuration (Saves active toggle overrides)
 router.put("/:sessionId/settings", requireUser, requireBody(["max_users", "session_status"]), async (req, res) => {
@@ -328,40 +313,36 @@ router.post("/matchmaking/auto-fill", requireUser, async (req, res) => {
 
 
 
-
-// Global memory state map to track player ready-status lists out of DB bounds
-const localReadyChecks = new Map();
-
 // 9A. PUT /api/sessions/:sessionId/ready
-router.put("/:sessionId/ready", requireUser, async (req, res) => {
-  try {
-    const { sessionId } = req.params;
-    const userId = Number(req.user.user_id);
+// router.put("/:sessionId/ready", requireUser, async (req, res) => {
+//   try {
+//     const { sessionId } = req.params;
+//     const userId = Number(req.user.user_id);
 
-    if (!localReadyChecks.has(sessionId)) {
-      localReadyChecks.set(sessionId, new Set());
-    }
+//     if (!localReadyChecks.has(sessionId)) {
+//       localReadyChecks.set(sessionId, new Set());
+//     }
 
-    const readySet = localReadyChecks.get(sessionId);
-    if (readySet.has(userId)) { readySet.delete(userId); } else { readySet.add(userId); }
-    res.send({ readyUserIds: Array.from(readySet) });
-  } catch (err) {
-    res.status(500).send("Error tracking localized ready state");
-  }
-});
+//     const readySet = localReadyChecks.get(sessionId);
+//     if (readySet.has(userId)) { readySet.delete(userId); } else { readySet.add(userId); }
+//     res.send({ readyUserIds: Array.from(readySet) });
+//   } catch (err) {
+//     res.status(500).send("Error tracking localized ready state");
+//   }
+// });
 
 // 9B. PUT /api/sessions/:sessionId/ready-reset
-router.put("/:sessionId/ready-reset", requireUser, async (req, res) => {
-  try {
-    localReadyChecks.delete(req.params.sessionId);
-    res.send({ message: "Ready checklist flushed cleanly" });
-  } catch (err) {
-    res.status(500).send("Error clearing local ready checklist");
-  }
-});
+// router.put("/:sessionId/ready-reset", requireUser, async (req, res) => {
+//   try {
+//     localReadyChecks.delete(req.params.sessionId);
+//     res.send({ message: "Ready checklist flushed cleanly" });
+//   } catch (err) {
+//     res.status(500).send("Error clearing local ready checklist");
+//   }
+// });
 
-// 9C. GET /api/sessions/:sessionId/ready-list
-router.get("/:sessionId/ready-list", async (req, res) => {
-  const readySet = localReadyChecks.get(req.params.sessionId) || new Set();
-  res.send({ readyUserIds: Array.from(readySet) });
-});
+// // 9C. GET /api/sessions/:sessionId/ready-list
+// router.get("/:sessionId/ready-list", async (req, res) => {
+//   const readySet = localReadyChecks.get(req.params.sessionId) || new Set();
+//   res.send({ readyUserIds: Array.from(readySet) });
+// });
