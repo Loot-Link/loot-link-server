@@ -1,16 +1,34 @@
 import express from "express";
-const router = express.Router();
-export default router;
 
-import { 
-  exchangeNpssoForCode, 
-  exchangeCodeForAccessToken, 
-  getRecentlyPlayedGames, // FIXED NAME
-  getTitleTrophies, 
-  makeUniversalSearch 
-} from "psn-api";
+const router = express.Router();
+
+let exchangeNpssoForCode;
+let exchangeCodeForAccessToken;
+let getRecentlyPlayedGames;
+let getTitleTrophies;
+let makeUniversalSearch;
+let psnApiLoaded = false;
+
+// Dynamically import psn-api to handle ESM compatibility
+(async () => {
+  try {
+    const pkg = await import("psn-api");
+    exchangeNpssoForCode = pkg.exchangeNpssoForCode;
+    exchangeCodeForAccessToken = pkg.exchangeCodeForAccessToken;
+    getRecentlyPlayedGames = pkg.getRecentlyPlayedGames;
+    getTitleTrophies = pkg.getTitleTrophies;
+    makeUniversalSearch = pkg.makeUniversalSearch;
+    psnApiLoaded = true;
+    console.log("PSN API loaded successfully");
+  } catch (err) {
+    console.error("Failed to load psn-api:", err);
+  }
+})();
 
 async function getAuth() {
+  if (!psnApiLoaded || !exchangeNpssoForCode) {
+    throw new Error("PSN API not loaded");
+  }
   const accessCode = await exchangeNpssoForCode(process.env.PSN_NPSSO);
   return await exchangeCodeForAccessToken(accessCode);
 }
@@ -54,3 +72,5 @@ router.get("/:accountId/trophies/:npId", async (req, res, next) => {
     next(err);
   }
 });
+
+export default router;
