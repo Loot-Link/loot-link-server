@@ -71,7 +71,7 @@ CREATE TABLE sessions (
   ended_at TIMESTAMP,
   last_activity_at TIMESTAMP DEFAULT NOW(),
 
-  matchmaking_enabled BOOLEAN DEFAULT TRUE,
+  matchmaking_enabled BOOLEAN DEFAULT TRUE, 
   playstyle TEXT,
 
   created_at TIMESTAMP NOT NULL DEFAULT NOW(),
