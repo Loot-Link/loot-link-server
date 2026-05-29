@@ -18,15 +18,7 @@ import { getUserByUserName } from "#db/queries/users";
 const getOrderedIds = (id1, id2) =>{
     return id1 < id2 ? { user_id_1: id1, user_id_2: id2 } : { user_id_1: id2, user_id_2: id1 };
 }
-/**        const smallerUID;
-        const biggerUID;
-        if(targetUsername.user_id < senderId){
-            biggerUID = senderId;
-            smallerUID = targetUsername.user_id;
-        }else{
-            biggerUID = targetUsername.user_id;
-            smallerUID = senderId;
-        } */
+
 
 //Get list of user's friends
 router.get('/', getUserFromToken, async (req, res, next)=>{
