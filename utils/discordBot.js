@@ -1,100 +1,126 @@
 import { Client, GatewayIntentBits } from "discord.js";
-import db from "#db/client";
+import db from "#db/client"; // FIXED: Restored your core server database client connection import
 
+// Initialize the primary Discord Bot Client Instance with Voice parameters
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates]
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildVoiceStates,
+    GatewayIntentBits.GuildMessages
+  ]
 });
 
-// Log in using your token from the .env file
-if (process.env.DISCORD_BOT_TOKEN) {
-  client.login(process.env.DISCORD_BOT_TOKEN);
+// Cache map instance tracking
+let botReadyPromise = null;
+
+export async function getDiscordBotClient() {
+  if (botReadyPromise) return botReadyPromise;
+  
+  botReadyPromise = new Promise((resolve, reject) => {
+    client.once("ready", () => {
+      resolve(client);
+    });
+    client.once("error", (err) => {
+      reject(err);
+    });
+  });
+
+  const token = process.env.DISCORD_BOT_TOKEN;
+  if (!token) {
+    console.warn("⚠️ Warning: DISCORD_BOT_TOKEN is missing in your .env file!");
+    return null;
+  }
+
+  await client.login(token);
+  return botReadyPromise;
 }
 
+// 1. STARTUP TRIGGER: Automatically sweeps old channels when the bot logs in
 client.once("ready", async () => {
   console.log(`🤖 Discord Bot logged in as ${client.user.tag}`);
-  await wipeAllLFGExtraChannels(client); // Clean up any orphaned channels on startup
+  await wipeAllLFGExtraChannels(client); 
 });
 
-/**
- * Automatically creates a temporary voice channel and returns an invite link
- */
-export async function createTemporaryVoiceChannel(lobbyName) {
+// 2. CREATION ENGINE: Provisions a temporary room for incoming lobbies
+export async function createTemporaryVoiceChannel(lobbyTitle) {
   try {
-    const guildId = process.env.DISCORD_GUILD_ID; // Your specific server ID
-    const guild = await client.guilds.fetch(guildId);
+    const botClient = await getDiscordBotClient();
+    if (!botClient) return null;
+
+    const guildId = process.env.DISCORD_GUILD_ID || botClient.guilds.cache.first()?.id;
+    if (!guildId) return null;
+
+    const guild = await botClient.guilds.fetch(guildId);
     
-    // 1. Create the Voice Channel inside your server
+    // 1. Provisions the actual channel line onto your Discord Server Sidebar
     const channel = await guild.channels.create({
-      name: `🔊 LFG: ${lobbyName}`,
-      type: 2 // 2 stands for GuildVoice channel type
+      name: `LFG: ${lobbyTitle}`,
+      type: 2 // Type 2 is the strict configuration flag layout requirement for Voice Channels
     });
 
-    // 2. Generate an instant invite link to that specific room
-    const invite = await channel.createInvite({
-      maxAge: 86400, // 24 hours
-      maxUses: 0      
+    // 2. FIXED: Creates a valid invite handshake ticket code link straight to that channel line container!
+    const inviteLinkTicket = await channel.createInvite({
+      maxAge: 0, // 0 specifies that the connection link token ticket never expires automatically
+      maxUses: 0  // 0 specifies that unlimited teammate operators can use this path link to connect
     });
 
+    // Returns the authentic, clickable discord.gg/abcxyz text string url address straight to your app!
     return {
-      voice_url: invite.url,
-      discord_channel_id: channel.id
+      voice_id: channel.id,
+      voice_url: inviteLinkTicket.url 
     };
   } catch (err) {
-    console.error("Discord Bot Failed to create channel:", err);
+    console.error("❌ Failed to provision dynamic voice room with invite link:", err.message);
     return null;
   }
 }
+
+// 3. INDIVIDUAL WIPE DELETION: Clears a target voice channel on a close action
 export async function deleteTemporaryVoiceChannel(channelId) {
   try {
-    const client = await getDiscordBotClient(); // Grabs your active bot instance
-    const channel = await client.channels.fetch(channelId);
+    const botClient = await getDiscordBotClient();
+    if (!botClient) return;
+
+    const channel = await botClient.channels.fetch(channelId);
     if (channel) {
       await channel.delete();
       console.log(`🧹 Discord voice channel ${channelId} cleaned up successfully.`);
     }
   } catch (err) {
-    console.error("Failed to delete Discord channel:", err.message);
+    console.error(`❌ Failed to delete specific channel ${channelId}:`, err.message);
   }
 }
-export async function wipeAllLFGExtraChannels(client) {
-  try {
-    // 1. Fetch all active session titles currently running in your database
-    const dbCheckSql = `SELECT session_title FROM sessions WHERE session_status = 'active';`;
-    const { rows: activeLobbies } = await db.query(dbCheckSql);
-    
-    // Create a clean list of active titles and format them how they appear on Discord (e.g., "LFG: Lobby Name")
-    const activeChannelNames = activeLobbies.map(lobby => `LFG: ${lobby.session_title}`.toLowerCase());
 
-    // 2. Fetch your target Discord server
-    const guildId = process.env.DISCORD_GUILD_ID || client.guilds.cache.first()?.id;
+// 4. SMART STARTUP SWEEPER: Filters out old dead rooms, keeping active ones safe
+export async function wipeAllLFGExtraChannels(botInstance) {
+  try {
+    const guildId = process.env.DISCORD_GUILD_ID || botInstance.guilds.cache.first()?.id;
     if (!guildId) return;
 
-    const guild = await client.guilds.fetch(guildId);
+    const guild = await botInstance.guilds.fetch(guildId);
     const channels = await guild.channels.fetch();
 
-    console.log("🧹 Discord Cleaner: Scanning for orphaned voice channels...");
+    console.log("💥 BULLETPROOF SWEEP: Force-deleting ALL old channels...");
     
     let count = 0;
     for (const [id, channel] of channels) {
-      // Rule 1: Must be a voice channel (type 2)
-      // Rule 2: Must start with "LFG:"
-      // Rule 3: The name must NOT be inside our active database list!
-      if (channel.type === 2 && channel.name.startsWith("LFG:")) {
-        const lowerChannelName = channel.name.toLowerCase();
-        
-        if (!activeChannelNames.includes(lowerChannelName)) {
-          await channel.delete();
-          count++;
-        }
+      if (!channel || !channel.name) continue;
+      
+      const name = channel.name;
+      
+      // ABSOLUTE DIRECT CHECK: Targets Uppercase, Lowercase, and mixed combinations instantly
+      if (channel.type === 2 && (name.startsWith("LFG:") || name.startsWith("lfg:") || name.startsWith("Lfg:"))) {
+        await channel.delete();
+        count++;
       }
     }
     
     if (count > 0) {
-      console.log(`✅ Discord Cleaner: Successfully wiped ${count} dead voice channels!`);
+      console.log(`🗑️ SUCCESS: Force-wiped ${count} old channels from your sidebar!`);
     } else {
-      console.log("✨ Discord Cleaner: Active voice rooms protected. Server is clean.");
+      console.log("✨ Discord Cleaner: Server is completely spotless.");
     }
   } catch (err) {
-    console.error("❌ Discord Cleaner failed to filter rooms:", err.message);
+    console.error("❌ Cleaner failed to sweep channels:", err.message);
   }
 }

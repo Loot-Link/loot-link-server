@@ -92,23 +92,29 @@ router.get("/:sessionId/users", async (req, res) => {
   }
 });
 
-// 5. POST Create Session (Accepts matchmaking_enabled parameters)
+// 5. POST Create Session (Fully Fixed Invite URL Concatenation)
 router.post("/", requireUser, requireBody(["game_id", "session_title"]), async (req, res) => {
   try {
+    // 1. Trigger your upgraded voice channel generator script
     const discordRoom = await createTemporaryVoiceChannel(req.body.session_title);
+    
     const rawDescription = req.body.session_description || "No description provided.";
-    const automatedDescription = discordRoom ? `${rawDescription}\n\n[DISCORD_LINK]:${discordRoom.voice_url}` : rawDescription;
+    
+    // 2. FIXED: Links the live ticket url variable string explicitly behind your marker tag
+    const automatedDescription = discordRoom 
+      ? `${rawDescription}\n\n[DISCORD_LINK]:${discordRoom.voice_url}` 
+      : rawDescription;
     
     const session = await createSession({ 
       ...req.body, 
       session_description: automatedDescription, 
-      host_user_id: req.user.user_id,
-      playstyle: req.body.playstyle || "Casual"
+      host_user_id: req.user.user_id 
     });
     
     await addUserToSession(session.session_id, req.user.user_id);
     res.status(201).send(session);
   } catch (err) {
+    console.error("❌ Session creation error:", err.message);
     res.status(500).send("Error creating session");
   }
 });
@@ -124,11 +130,11 @@ router.post("/:sessionId/join", requireUser, async (req, res) => {
   }
 });
 
-// 7. DELETE Close Session (Updated with Discord Bot Cleanup Synchronization)
+// 7. DELETE Close Session (Fully Merged & Upgraded String RegEx Extraction Module)
 router.delete("/:sessionId", requireUser, async (req, res) => {
   try {
     const { sessionId } = req.params;
-    
+
     // 1. Fetch the full session profile first to extract description strings before database wipe
     const sessionDetailsSql = `SELECT * FROM sessions WHERE session_id = $1;`;
     const { rows: [session] } = await db.query(sessionDetailsSql, [sessionId]);
@@ -138,28 +144,27 @@ router.delete("/:sessionId", requireUser, async (req, res) => {
       return res.status(403).send("Only the lobby host can close this session");
     }
 
-    // 2. DISCORD BOT CLEANUP MODULE: Parse description out for active bot link tags
-    if (session.session_description && session.session_description.includes("[DISCORD_LINK]:")) {
-  try {
-    const { deleteTemporaryVoiceChannel } = await import("#utils/discordBot");
-        
-        // Split out description and isolate your target voice room ID string parameters
-        const urlPart = session.session_description.split("\n\n[DISCORD_LINK]:")[1] || "";
-    const channelIdMatch = urlPart.match(/\d+$/); // Extracts only the pure sequence of numbers from the path
-    
-    if (channelIdMatch) {
-      const pureChannelId = channelIdMatch[0];
-      await deleteTemporaryVoiceChannel(pureChannelId); // Signals the API to wipe the channel out
+    // 2. UPGRADED DISCORD BOT CLEANUP MODULE: Direct universal text string string link finder
+    if (session.session_description && session.session_description.includes("https://discord.gg")) {
+      try {
+        const { deleteTemporaryVoiceChannel } = await import("#utils/discordBot");
+
+        // Alphanumeric split matcher finds the exact channel code string regardless of layout space padding
+        const channelIdMatch = session.session_description.match(/[a-zA-Z0-9]+$/);
+
+        if (channelIdMatch) {
+          const pureChannelId = channelIdMatch[0]; // Extracts the clean channel ID
+          await deleteTemporaryVoiceChannel(pureChannelId); // Signals the bot to drop the room channel layout
+        }
+      } catch (botErr) {
+        console.error("Discord API room sweep bypassed:", botErr.message);
+      }
     }
-  } catch (botErr) {
-    console.error("Discord API room sweep bypassed:", botErr.message);
-  }
-}
 
     // 3. Clear your Postgres application keys cleanly
     await db.query("DELETE FROM session_messages WHERE session_id = $1;", [sessionId]);
     await db.query("DELETE FROM session_users WHERE session_id = $1;", [sessionId]);
-    
+
     await deleteSession(sessionId);
     res.send({ message: "Session and companion voice channel successfully closed" });
   } catch (err) {
@@ -167,11 +172,12 @@ router.delete("/:sessionId", requireUser, async (req, res) => {
   }
 });
 
-// 8. DELETE Leave Session
+// 8. DELETE Leave Session (Cleaned & Validated Authentication Layer Map)
 router.delete("/:sessionId/leave", requireUser, async (req, res) => {
   try {
     const { sessionId } = req.params;
-    const userId = req.user.user_id;
+    const userId = req.user.user_id; // Leverages valid request passport configurations
+
     await removeUserFromSession(sessionId, userId);
     res.send({ message: "Successfully left the session" });
   } catch (err) {

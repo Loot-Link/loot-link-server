@@ -47,21 +47,21 @@ export async function createSession(sessionData) {
       created_by_user_id, 
       is_private, 
       matchmaking_enabled,
-      playstyle -- 1. Added the target column to the insertion statement layout
+      playstyle
     )
-    VALUES ($1, $2, $3, $4, $5, $2, $6, $7, $8) -- 2. Added placeholder variable parameter $8 here
+    VALUES ($1, $2, $3, $4, $5, $2, $6, $7, $8)
     RETURNING *;
   `;
   
   const { rows: [session] } = await db.query(sql, [
-    game_id,             // $1
-    host_user_id,         // $2
-    session_title,       // $3
-    session_description, // $4
-    max_users || 4,      // $5
-    is_private ?? false, // $6
-    matchmaking_enabled ?? false, // $7
-    playstyle || 'Casual' // $8 - Default to 'Casual' if not provided, ensuring the new column is always populated
+    game_id,
+    host_user_id,
+    session_title,
+    session_description || "No description provided.",
+    max_users || 4,
+    is_private ?? false,
+    matchmaking_enabled ?? false,
+    playstyle || 'Casual'
   ]);
   
   return session;
