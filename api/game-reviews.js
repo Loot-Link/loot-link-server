@@ -8,8 +8,13 @@ import {
     getGameReviews, 
     getGameReviewByGameId, 
     getGameReviewById, 
-    getMyReview
+    getMyReview,
+    incrementGameReviewViewCount
     } from '#db/queries/reviews';
+
+
+
+
 
 const gameReviewsRouter= express.Router();
 export default gameReviewsRouter;
@@ -33,8 +38,10 @@ gameReviewsRouter.get('/:id/games', async (req, res) => {
     res.send(game);
 });
 
-gameReviewsRouter.get('/:id', (req, res) => {
-    res.send(req.gameReview);
+gameReviewsRouter.get('/:id', async (req, res) => {
+    const gameReview = await getGameReviewById(req.params.id);
+    await incrementGameReviewViewCount(req.params.id);
+    res.send(gameReview);
 });
 
 // Then the list route (least specific)

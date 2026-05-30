@@ -11,7 +11,8 @@ import {
   getSessionsByUserId,
   deleteSession,
   removeUserFromSession,
-  updateSession 
+  updateSession,
+  getSessionById 
 } from "#db/queries/sessions";
 
 import { 
@@ -20,6 +21,7 @@ import {
   markNotificationAsRead
    
 } from "#db/queries/notifications";
+
 
 import requireBody from "#middleware/requireBody";
 import requireUser from "#middleware/requireUser";
@@ -130,6 +132,37 @@ router.post("/:sessionId/join", requireUser, async (req, res) => {
   }
 });
 
+
+// 6.5 EMJ - Add user to session from dropdown
+router.post("/:sessionId/addUser", requireUser, async (req, res) => {
+  try {
+    const sessionUser = await addUserToSession(
+      req.params.sessionId,
+      req.body.user_id
+    );
+
+
+  const session = await getSessionById(req.params.sessionId);
+  try {
+    await createNotification(
+      req.body.user_id,
+      3,
+      `${req.user.username} invited you to a session: ${session.session_title}`
+    );
+  } catch (notificationErr) {
+    console.error("Notification failed:", notificationErr);
+  }
+
+    res.status(201).send(sessionUser);
+  } catch (err) {
+    if (err.code === "23505") return res.status(400).send("user Already in session");
+    res.status(500).send("Error adding user to session");
+  }
+});
+
+
+
+
 // 7. DELETE Close Session (Fully Merged & Upgraded String RegEx Extraction Module)
 router.delete("/:sessionId", requireUser, async (req, res) => {
   try {
@@ -172,18 +205,6 @@ router.delete("/:sessionId", requireUser, async (req, res) => {
   }
 });
 
-// 8. DELETE Leave Session (Cleaned & Validated Authentication Layer Map)
-router.delete("/:sessionId/leave", requireUser, async (req, res) => {
-  try {
-    const { sessionId } = req.params;
-    const userId = req.user.user_id; // Leverages valid request passport configurations
-
-    await removeUserFromSession(sessionId, userId);
-    res.send({ message: "Successfully left the session" });
-  } catch (err) {
-    res.status(500).send("Error leaving session");
-  }
-});
 
 // 9. PUT Lobby settings configuration (Saves active toggle overrides)
 router.put("/:sessionId/settings", requireUser, requireBody(["max_users", "session_status"]), async (req, res) => {
@@ -289,3 +310,39 @@ router.post("/matchmaking/auto-fill", requireUser, async (req, res) => {
     res.status(500).send("Matchmaking server encountered an issue");
   }
 });
+
+
+
+// 9A. PUT /api/sessions/:sessionId/ready
+// router.put("/:sessionId/ready", requireUser, async (req, res) => {
+//   try {
+//     const { sessionId } = req.params;
+//     const userId = Number(req.user.user_id);
+
+//     if (!localReadyChecks.has(sessionId)) {
+//       localReadyChecks.set(sessionId, new Set());
+//     }
+
+//     const readySet = localReadyChecks.get(sessionId);
+//     if (readySet.has(userId)) { readySet.delete(userId); } else { readySet.add(userId); }
+//     res.send({ readyUserIds: Array.from(readySet) });
+//   } catch (err) {
+//     res.status(500).send("Error tracking localized ready state");
+//   }
+// });
+
+// 9B. PUT /api/sessions/:sessionId/ready-reset
+// router.put("/:sessionId/ready-reset", requireUser, async (req, res) => {
+//   try {
+//     localReadyChecks.delete(req.params.sessionId);
+//     res.send({ message: "Ready checklist flushed cleanly" });
+//   } catch (err) {
+//     res.status(500).send("Error clearing local ready checklist");
+//   }
+// });
+
+// // 9C. GET /api/sessions/:sessionId/ready-list
+// router.get("/:sessionId/ready-list", async (req, res) => {
+//   const readySet = localReadyChecks.get(req.params.sessionId) || new Set();
+//   res.send({ readyUserIds: Array.from(readySet) });
+// });

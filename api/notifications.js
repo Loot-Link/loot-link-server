@@ -24,7 +24,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-router.get("/mynotifications", async (req, res) => {
+router.get("/mynotifications", requireUser, async (req, res) => {
   try {
     const allMyNotifications = await getAllMyNotifications(req.user.user_id);
     // Return empty array instead of 404 so the frontend doesn't crash on new lobbies
@@ -54,6 +54,8 @@ router.get("/mynotifications", async (req, res) => {
 //     next(err);
 //   }
 // });
+
+
 router.post(
   "/",
   requireUser,

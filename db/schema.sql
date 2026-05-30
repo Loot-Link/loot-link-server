@@ -73,6 +73,9 @@ CREATE TABLE sessions (
   ended_at TIMESTAMP,
   last_activity_at TIMESTAMP DEFAULT NOW(),
 
+  matchmaking_enabled BOOLEAN DEFAULT TRUE, 
+  playstyle TEXT,
+
   created_at TIMESTAMP NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
   created_by_user_id INT NULL REFERENCES users(user_id),
