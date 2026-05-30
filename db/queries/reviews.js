@@ -91,52 +91,18 @@ export async function getMyReview(userId) {
     return myGameReviews;
 };
 
-//recent reviews?
+export async function incrementGameReviewViewCount(id) {
+  const {
+    rows: [review],
+  } = await db.query(
+    `
+    UPDATE game_reviews
+    SET view_counter = view_counter + 1
+    WHERE game_review_id = $1
+    RETURNING *
+    `,
+    [id]
+  );
 
-/* ====== Session Reviews ====== */
-
-// export async function createSessionReview(
-//     sessionReviewId,
-//     sessionId,
-//     userId,
-//     ratingValue
-// ) {
-//     const sql = `
-//     INSERT INTO session_reviews (
-//         session_review_id,
-//         session_id,
-//         user_id,
-//         rating_value
-//     )
-//     VALUES ($1, $2, $3, $4)
-//     RETURNING *
-//     `;
-//     const { rows: [sessionReview] } = await db.query(sql, [
-//         sessionReviewId,
-//         sessionId,
-//         userId,
-//         ratingValue
-//     ]);
-//     return sessionReview;
-// };
-
-// export async function getSessionReviews() {
-//     const sql = `
-//     SELECT *
-//     FROM session_reviews
-//     `;
-//     const { rows: sessionReviews } = await db.query(sql);
-//     return sessionReviews;
-// };
-
-// export async function getSessionReviewById(sessionReviewId) {
-//     const sql = `
-//     SELECT *
-//     FROM session_reviews
-//     WHERE session_id = $1
-//     `;
-//     const { rows: [sessionReview] } = await db.query(sql, [sessionReviewId]);
-//     return sessionReview;
-// };
-
-/* ====== My Reviews ====== */
+  return review;
+}
