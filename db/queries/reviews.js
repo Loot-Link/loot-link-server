@@ -106,3 +106,18 @@ export async function incrementGameReviewViewCount(id) {
 
   return review;
 }
+
+export async function deleteGameReviewById(gameReviewId, userId) {
+  const sql = `
+    DELETE FROM game_reviews
+    WHERE game_review_id = $1
+      AND user_id = $2
+    RETURNING *
+  `;
+
+  const {
+    rows: [deletedReview],
+  } = await db.query(sql, [gameReviewId, userId]);
+
+  return deletedReview;
+}

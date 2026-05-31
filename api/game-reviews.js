@@ -9,7 +9,8 @@ import {
     getGameReviewByGameId, 
     getGameReviewById, 
     getMyReview,
-    incrementGameReviewViewCount
+    incrementGameReviewViewCount,
+    deleteGameReviewById
     } from '#db/queries/reviews';
 
 
@@ -52,6 +53,25 @@ gameReviewsRouter.get('/', async (req, res) => {
 
 gameReviewsRouter.use(requireUser);
 
+gameReviewsRouter.delete('/:id', async (req, res, next) => {
+    const userId = req.user.user_id;
+
+    if (req.gameReview.user_id !== userId) {
+        return res.status(403).send('You are not authorized to delete this review.');
+    }
+
+    try {
+        const deletedReview = await deleteGameReviewById(req.params.id, userId);
+        if (!deletedReview) {
+            return res.status(404).send('Review not found.');
+        }
+
+        res.send({ message: 'Review deleted successfully.', deletedReview });
+    } catch (err) {
+        next(err);
+    }
+});
+
 gameReviewsRouter.post('/', requireBody([
     'reviewTitle',
     'gameReview', 
@@ -84,6 +104,8 @@ gameReviewsRouter.post('/', requireBody([
         next(err);
     }
 });
+
+
 
 // gameReviewsRouter.get('/myReviews', async (req, res) => {
 //     const myReviews = await getMyReview(req.user.id);
