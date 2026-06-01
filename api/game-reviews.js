@@ -10,7 +10,11 @@ import {
     getGameReviewById, 
     getMyReview,
     incrementGameReviewViewCount,
-    deleteGameReviewById
+    deleteGameReviewById,
+    updateGameReviewById,
+    getReviewVotes,
+    upsertReviewVote,
+    deleteReviewVote
     } from '#db/queries/reviews';
 
 
@@ -45,6 +49,19 @@ gameReviewsRouter.get('/:id', async (req, res) => {
     res.send(gameReview);
 });
 
+// Public endpoint: get vote totals for a review (and user's vote if auth provided)
+gameReviewsRouter.get('/:id/votes', async (req, res, next) => {
+    try {
+        // If token provided and requireUser middleware not used, user may be undefined
+        // We attempt to read user from req.user if middleware ran earlier; otherwise null
+        const userId = req.user ? req.user.user_id : null;
+        const votes = await getReviewVotes(req.params.id, userId);
+        res.send(votes);
+    } catch (err) {
+        next(err);
+    }
+});
+
 // Then the list route (least specific)
 gameReviewsRouter.get('/', async (req, res) => {
     const gameReviews = await getGameReviews();
@@ -52,6 +69,26 @@ gameReviewsRouter.get('/', async (req, res) => {
 });
 
 gameReviewsRouter.use(requireUser);
+
+gameReviewsRouter.patch('/:id', requireBody(['reviewTitle', 'gameReview', 'ratingValue']), async (req, res, next) => {
+    const userId = req.user.user_id;
+
+    if (req.gameReview.user_id !== userId) {
+        return res.status(403).send('You are not authorized to update this review.');
+    }
+
+    try {
+        const { reviewTitle, gameReview, ratingValue } = req.body;
+        const updatedReview = await updateGameReviewById(req.params.id, userId, reviewTitle, gameReview, ratingValue);
+        if (!updatedReview) {
+            return res.status(404).send('Review not found.');
+        }
+
+        res.send({ message: 'Review updated successfully.', updatedReview });
+    } catch (err) {
+        next(err);
+    }
+});
 
 gameReviewsRouter.delete('/:id', async (req, res, next) => {
     const userId = req.user.user_id;
@@ -100,6 +137,35 @@ gameReviewsRouter.post('/', requireBody([
         );
 
         res.status(201).json(newGameReview);
+    } catch (err) {
+        next(err);
+    }
+});
+
+// Upsert a vote for the current user (1 = thumbs up, -1 = thumbs down)
+gameReviewsRouter.post('/:id/vote', requireBody(['voteValue']), async (req, res, next) => {
+    try {
+        const userId = req.user.user_id;
+        const voteValue = Number(req.body.voteValue);
+        if (![1, -1].includes(voteValue)) {
+            return res.status(400).send('voteValue must be 1 or -1');
+        }
+
+        const vote = await upsertReviewVote(req.params.id, userId, voteValue);
+        const totals = await getReviewVotes(req.params.id, userId);
+        res.status(200).send({ vote, totals });
+    } catch (err) {
+        next(err);
+    }
+});
+
+// Remove current user's vote for the review
+gameReviewsRouter.delete('/:id/vote', async (req, res, next) => {
+    try {
+        const userId = req.user.user_id;
+        const deleted = await deleteReviewVote(req.params.id, userId);
+        const totals = await getReviewVotes(req.params.id, userId);
+        res.send({ deleted, totals });
     } catch (err) {
         next(err);
     }

@@ -197,6 +197,17 @@ CREATE TABLE game_reviews (
 );
 
 
+-- Table to store thumbs up / thumbs down votes for game reviews
+CREATE TABLE review_votes (
+  review_vote_id SERIAL PRIMARY KEY,
+  game_review_id INT NOT NULL REFERENCES game_reviews(game_review_id) ON DELETE CASCADE,
+  user_id INT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+  vote_value INT NOT NULL CHECK (vote_value IN (1, -1)), -- 1 = thumbs up, -1 = thumbs down
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  UNIQUE (game_review_id, user_id)
+);
+
+
 
 
 -- ************************ Notifications TABLES ************************ -- 
