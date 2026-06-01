@@ -45,10 +45,22 @@ export async function getGameReviews() {
         game_reviews.*,
         games.game_title,
         games.cover_image_url,
-        users.username
+        users.username,
+        COALESCE(rv.score, 0) AS vote_score,
+        COALESCE(rv.upvotes, 0) AS vote_upvotes,
+        COALESCE(rv.downvotes, 0) AS vote_downvotes
     FROM game_reviews
     INNER JOIN games ON games.game_id = game_reviews.game_id
     INNER JOIN users ON users.user_id = game_reviews.user_id
+    LEFT JOIN (
+      SELECT
+        game_review_id,
+        SUM(vote_value) AS score,
+        SUM(CASE WHEN vote_value = 1 THEN 1 ELSE 0 END) AS upvotes,
+        SUM(CASE WHEN vote_value = -1 THEN 1 ELSE 0 END) AS downvotes
+      FROM review_votes
+      GROUP BY game_review_id
+    ) rv ON rv.game_review_id = game_reviews.game_review_id
     `;
     const { rows: gameReviews } = await db.query(sql);
     return gameReviews;

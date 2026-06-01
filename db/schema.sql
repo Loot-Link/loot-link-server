@@ -5,7 +5,8 @@ DROP TABLE IF EXISTS session_users; --Depends on sessions & users
 DROP TABLE IF EXISTS session_messages; --Depends on sessions & users
 DROP TABLE IF EXISTS sessions; -- Depends on users
 DROP TABLE IF EXISTS friendships; --Depends on users
-DROP TABLE IF EXISTS game_reviews; --No current dependencies
+DROP TABLE IF EXISTS review_votes; -- Depends on game_reviews & users
+DROP TABLE IF EXISTS game_reviews; --Depends on users and games
 DROP TABLE IF EXISTS users; --Depends on roles
 DROP TABLE IF EXISTS platforms; --No current dependencies
 
