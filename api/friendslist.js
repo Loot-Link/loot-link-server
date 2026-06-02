@@ -85,6 +85,19 @@ router.post('/accept/:senderId', getUserFromToken, async (req, res, next)=>{
     next(err);
   } 
 });
+//User Cancels a friend request
+router.delete('/request/:senderId', getUserFromToken, async (req, res, next)=>{
+    try {
+        const senderId  = Number(req.params.senderId);
+        const receiverId = req.user.user_id;
+   
+        const { user_id_1, user_id_2 } = getOrderedIds(senderId, receiverId);
+        const cancelFriend = await removeFromBlocklist(user_id_1, user_id_2, receiverId);
+        res.status(200).send(cancelFriend);
+    }catch(err){
+        next(err);
+    } 
+});
 
 //User denies a friend request (Should also work for removing a friendship)
 router.post('/deny/:senderId', getUserFromToken, async (req, res, next)=>{
