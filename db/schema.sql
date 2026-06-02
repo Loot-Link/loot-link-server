@@ -5,7 +5,8 @@ DROP TABLE IF EXISTS session_users; --Depends on sessions & users
 DROP TABLE IF EXISTS session_messages; --Depends on sessions & users
 DROP TABLE IF EXISTS sessions; -- Depends on users
 DROP TABLE IF EXISTS friendships; --Depends on users
-DROP TABLE IF EXISTS game_reviews; --No current dependencies
+DROP TABLE IF EXISTS review_votes; -- Depends on game_reviews & users
+DROP TABLE IF EXISTS game_reviews; --Depends on users and games
 DROP TABLE IF EXISTS users; --Depends on roles
 DROP TABLE IF EXISTS platforms; --No current dependencies
 
@@ -196,6 +197,17 @@ CREATE TABLE game_reviews (
   flagged_at TIMESTAMP,
   flagged_by INTEGER REFERENCES users(user_id),
   flag_reason TEXT
+);
+
+
+-- Table to store thumbs up / thumbs down votes for game reviews
+CREATE TABLE review_votes (
+  review_vote_id SERIAL PRIMARY KEY,
+  game_review_id INT NOT NULL REFERENCES game_reviews(game_review_id) ON DELETE CASCADE,
+  user_id INT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+  vote_value INT NOT NULL CHECK (vote_value IN (1, -1)), -- 1 = thumbs up, -1 = thumbs down
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  UNIQUE (game_review_id, user_id)
 );
 
 
