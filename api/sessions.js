@@ -205,6 +205,30 @@ router.delete("/:sessionId", requireUser, async (req, res) => {
   }
 });
 
+// 7b. NEW HOST KICK USER MODULE (Merged directly under Close Session endpoint)
+router.delete("/:sessionId/kick/:targetUserId", requireUser, async (req, res) => {
+  try {
+    const { sessionId, targetUserId } = req.params;
+    const currentUserId = req.user.user_id;
+
+    // Verify the incoming request operator is the authentic host of the lobby target row
+    const hostVerifySql = `SELECT host_user_id FROM sessions WHERE session_id = $1;`;
+    const { rows: [session] } = await db.query(hostVerifySql, [sessionId]);
+    
+    if (!session) return res.status(404).send("Session lobby row entry not found");
+    if (Number(session.host_user_id) !== Number(currentUserId)) {
+      return res.status(403).send("Unauthorized: Only the lobby host can execute player kicks.");
+    }
+
+    // Safely removes the player row connection via your existing schema junction functions
+    await removeUserFromSession(sessionId, targetUserId);
+    
+    res.send({ message: "Teammate successfully kicked from your active gaming squad layout." });
+  } catch (err) {
+    console.error("Host kick routing execution error:", err.message);
+    res.status(500).send("Error executing player kick from session table registry.");
+  }
+});
 
 // 9. PUT Lobby settings configuration (Saves active toggle overrides)
 router.put("/:sessionId/settings", requireUser, requireBody(["max_users", "session_status"]), async (req, res) => {
