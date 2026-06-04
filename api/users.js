@@ -2,21 +2,13 @@ import express from "express";
 const router = express.Router();
 export default router;
 
-import { createUser, getUserByEmailAndPassword, getUsers } from "#db/queries/users";
+import { createUser, getUserByEmailAndPassword, getUsers, updateUser } from "#db/queries/users";
 import requireBody from "#middleware/requireBody";
 import { createToken } from "#utils/jwt";
 import { getUserById } from "#db/queries/users";
 import getUserFromToken from "#middleware/getUserFromToken";
 
-
-
-
 router.use(getUserFromToken);
-
-
-
-
-
 
 //Currently just for home page?
 router.get("/",  async (req, res) => {
@@ -31,7 +23,6 @@ router.get("/",  async (req, res) => {
   res.send(result);
   // console.log("REQ.USER:", req.user);
 });
-
 
 //Users for dropdown
 router.get("/dropdown",  async (req, res) => {
@@ -51,10 +42,6 @@ router.get("/dropdown",  async (req, res) => {
   res.send(result);
   console.log("dropdown REQ.USER:", req.user);
 });
-
-
-
-
 
 router.post(
   "/register",
@@ -108,7 +95,6 @@ router.post(
   }
 );
 
-
 //Get ME - my user info
 router.use((req, res, next) => {
   if (!req.user) return res.status(401).send("Unauthorized");
@@ -117,4 +103,22 @@ router.use((req, res, next) => {
 router.get("/me", async (req, res) => {
   const user = await getUserById(req.user.id);
   res.send(req.user);
+});
+
+router.post("/me", async (req, res) => {
+  try {
+    const userId = req.user.user_id;
+    const { date_of_birth, gender, bio } = req.body;
+
+    const updatedUser = await updateUser(userId, { date_of_birth, gender, bio });
+
+    console.log("API call: ", updatedUser);
+    
+    if (updatedUser) {
+      delete updatedUser.password;
+    }
+    res.status(200).send(updatedUser);
+  } catch (err) {
+    console.error(err);
+  }
 });

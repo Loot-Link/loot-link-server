@@ -43,7 +43,10 @@ CREATE TABLE users (
   active BOOLEAN NOT NULL DEFAULT TRUE,
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW(),
-  avatar_url TEXT
+  avatar_url TEXT,
+  date_of_birth DATE,
+  gender TEXT,
+  bio TEXT
 );
  
 CREATE TABLE friendships ( 
