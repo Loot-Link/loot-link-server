@@ -30,19 +30,37 @@ import requireUser from "#middleware/requireUser";
 router.get("/", async (req, res) => {
   try {
     const sql = `
-      SELECT sessions.session_id, sessions.game_id, sessions.host_user_id, sessions.session_title,
-              sessions.session_description, sessions.max_users, sessions.session_status, sessions.is_private,
-              sessions.matchmaking_enabled, sessions.playstyle, -- NEW: Pull down playstyle tag
-              sessions.created_at, sessions.updated_at, games.game_title, games.cover_image_url,
-              COUNT(session_users.user_id)::INTEGER as current_user_count
-  FROM sessions
-  JOIN games ON sessions.game_id = games.game_id
-  LEFT JOIN session_users ON sessions.session_id = session_users.session_id
-  GROUP BY sessions.session_id, games.game_title, games.cover_image_url, sessions.playstyle; -- NEW: Added to GROUP BY
-`;
+      SELECT 
+        sessions.session_id, 
+        sessions.game_id, 
+        sessions.host_user_id, 
+        sessions.session_title, 
+        sessions.session_description, 
+        sessions.max_users, 
+        sessions.session_status, 
+        sessions.is_private, 
+        sessions.matchmaking_enabled, 
+        sessions.playstyle, 
+        sessions.created_at, 
+        sessions.updated_at,
+        games.game_title,
+        games.cover_image_url,
+        users.username AS host_username, -- ✅ CRITICAL: Fetches the host's real name!
+        COUNT(session_users.user_id)::INTEGER as current_user_count
+      FROM sessions
+      JOIN games ON sessions.game_id = games.game_id
+      JOIN users ON sessions.host_user_id = users.user_id -- ✅ CRITICAL: Joins the user profiles!
+      LEFT JOIN session_users ON sessions.session_id = session_users.session_id
+      GROUP BY 
+        sessions.session_id, 
+        games.game_title, 
+        games.cover_image_url, 
+        users.username;
+    `;
     const { rows: sessions } = await db.query(sql);
     res.send(sessions);
   } catch (err) {
+    console.error("❌ Sessions route breakdown:", err.message);
     res.status(500).send("Error fetching sessions catalog");
   }
 });
