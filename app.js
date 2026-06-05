@@ -13,6 +13,7 @@ import gamesRouter from "#api/games";
 import sessionsRouter from "#api/sessions";
 import sessionMessagesRouter from "#api/sessionmessages";
 import gameReviewsRouter from "#api/game-reviews";
+import sessionReviewsRouter from "#api/session-reviews";
 
 import steamRouter from "#api/steam";
 import xboxRouter from "#api/xbox";
@@ -35,6 +36,7 @@ app.use("/api/games", gamesRouter);
 app.use("/api/sessions", sessionsRouter);
 app.use("/api/session-messages", sessionMessagesRouter);
 app.use("/api/game-reviews", gameReviewsRouter);
+app.use("/api/session-reviews", sessionReviewsRouter);
 
 app.use("/api/battlenet", battleNetRouter);
 app.use("/api/steam", steamRouter);
