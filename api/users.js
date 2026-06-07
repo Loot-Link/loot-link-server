@@ -7,7 +7,7 @@ import requireBody from "#middleware/requireBody";
 import { createToken } from "#utils/jwt";
 import { getUserById } from "#db/queries/users";
 import getUserFromToken from "#middleware/getUserFromToken";
-import { getUserFavoriteGames } from "#db/queries/games";
+import { addFavoriteGame, getUserFavoriteGames } from "#db/queries/games";
 
 router.use(getUserFromToken);
 
@@ -117,7 +117,7 @@ router.get("/:userId/favorites", async (req, res) => {
   }
 });
 
-router.post("/me", async (req, res) => {
+router.post("/me", getUserFromToken, async (req, res) => {
   try {
     const userId = req.user.user_id;
     const { date_of_birth, gender, bio } = req.body;
@@ -132,5 +132,22 @@ router.post("/me", async (req, res) => {
     res.status(200).send(updatedUser);
   } catch (err) {
     console.error(err);
+  }
+});
+
+router.post("/:userId/favorites", getUserFromToken, async (req, res) => {
+  try {
+    const  userId  = req.user.user_id;
+    const { game_id } = req.body; 
+
+    if (!game_id) {
+      return res.status(400).send({ error: "game_id is required" });
+    }
+    const updatedFavorites = await addFavoriteGame(userId, game_id);
+    res.status(200).send(updatedFavorites);
+
+  } catch (error) {
+    console.error("Error adding favorite:", error);
+    res.status(500).send({ error: "Internal server error" });
   }
 });

@@ -50,11 +50,7 @@ CREATE TABLE users (
   bio TEXT
 );
 
-CREATE TABLE user_favorite_games (
-    user_id INT REFERENCES users(user_id) ON DELETE CASCADE,
-    game_id INT REFERENCES games(game_id) ON DELETE CASCADE,
-    PRIMARY KEY (user_id, game_id)
-);
+
  
 CREATE TABLE friendships ( 
   user_id_1 INTEGER REFERENCES users(user_id) ON DELETE CASCADE,
@@ -165,7 +161,12 @@ CREATE TABLE games (
   created_at TIMESTAMP NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
-
+--Moved to create after games table is created.
+CREATE TABLE user_favorite_games (
+    user_id INT REFERENCES users(user_id) ON DELETE CASCADE,
+    game_id INT REFERENCES games(game_id) ON DELETE CASCADE,
+    PRIMARY KEY (user_id, game_id)
+);
 CREATE TABLE platforms (
   platform_id SERIAL PRIMARY KEY,
   platform_name TEXT NOT NULL UNIQUE, -- steam, xbox, psn
