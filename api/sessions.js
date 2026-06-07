@@ -30,19 +30,37 @@ import requireUser from "#middleware/requireUser";
 router.get("/", async (req, res) => {
   try {
     const sql = `
-      SELECT sessions.session_id, sessions.game_id, sessions.host_user_id, sessions.session_title,
-              sessions.session_description, sessions.max_users, sessions.session_status, sessions.is_private,
-              sessions.matchmaking_enabled, sessions.playstyle, -- NEW: Pull down playstyle tag
-              sessions.created_at, sessions.updated_at, games.game_title, games.cover_image_url,
-              COUNT(session_users.user_id)::INTEGER as current_user_count
-  FROM sessions
-  JOIN games ON sessions.game_id = games.game_id
-  LEFT JOIN session_users ON sessions.session_id = session_users.session_id
-  GROUP BY sessions.session_id, games.game_title, games.cover_image_url, sessions.playstyle; -- NEW: Added to GROUP BY
-`;
+      SELECT 
+        sessions.session_id, 
+        sessions.game_id, 
+        sessions.host_user_id, 
+        sessions.session_title, 
+        sessions.session_description, 
+        sessions.max_users, 
+        sessions.session_status, 
+        sessions.is_private, 
+        sessions.matchmaking_enabled, 
+        sessions.playstyle, 
+        sessions.created_at, 
+        sessions.updated_at,
+        games.game_title,
+        games.cover_image_url,
+        users.username AS host_username, -- ✅ CRITICAL: Fetches the host's real name!
+        COUNT(session_users.user_id)::INTEGER as current_user_count
+      FROM sessions
+      JOIN games ON sessions.game_id = games.game_id
+      JOIN users ON sessions.host_user_id = users.user_id -- ✅ CRITICAL: Joins the user profiles!
+      LEFT JOIN session_users ON sessions.session_id = session_users.session_id
+      GROUP BY 
+        sessions.session_id, 
+        games.game_title, 
+        games.cover_image_url, 
+        users.username;
+    `;
     const { rows: sessions } = await db.query(sql);
     res.send(sessions);
   } catch (err) {
+    console.error("❌ Sessions route breakdown:", err.message);
     res.status(500).send("Error fetching sessions catalog");
   }
 });
@@ -205,6 +223,30 @@ router.delete("/:sessionId", requireUser, async (req, res) => {
   }
 });
 
+// 7b. NEW HOST KICK USER MODULE (Merged directly under Close Session endpoint)
+router.delete("/:sessionId/kick/:targetUserId", requireUser, async (req, res) => {
+  try {
+    const { sessionId, targetUserId } = req.params;
+    const currentUserId = req.user.user_id;
+
+    // Verify the incoming request operator is the authentic host of the lobby target row
+    const hostVerifySql = `SELECT host_user_id FROM sessions WHERE session_id = $1;`;
+    const { rows: [session] } = await db.query(hostVerifySql, [sessionId]);
+    
+    if (!session) return res.status(404).send("Session lobby row entry not found");
+    if (Number(session.host_user_id) !== Number(currentUserId)) {
+      return res.status(403).send("Unauthorized: Only the lobby host can execute player kicks.");
+    }
+
+    // Safely removes the player row connection via your existing schema junction functions
+    await removeUserFromSession(sessionId, targetUserId);
+    
+    res.send({ message: "Teammate successfully kicked from your active gaming squad layout." });
+  } catch (err) {
+    console.error("Host kick routing execution error:", err.message);
+    res.status(500).send("Error executing player kick from session table registry.");
+  }
+});
 
 // 9. PUT Lobby settings configuration (Saves active toggle overrides)
 router.put("/:sessionId/settings", requireUser, requireBody(["max_users", "session_status"]), async (req, res) => {
