@@ -7,6 +7,7 @@ import requireBody from "#middleware/requireBody";
 import { createToken } from "#utils/jwt";
 import { getUserById } from "#db/queries/users";
 import getUserFromToken from "#middleware/getUserFromToken";
+import { getUserFavoriteGames } from "#db/queries/games";
 
 router.use(getUserFromToken);
 
@@ -103,6 +104,17 @@ router.use((req, res, next) => {
 router.get("/me", async (req, res) => {
   const user = await getUserById(req.user.id);
   res.send(req.user);
+});
+router.get("/:userId/favorites", async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const favorites = await getUserFavoriteGames(userId);
+    
+    res.send(favorites);
+  } catch (error) {
+    console.error("Error fetching favorites:", error);
+    res.status(500).send({ error: "Internal server error" });
+  }
 });
 
 router.post("/me", async (req, res) => {

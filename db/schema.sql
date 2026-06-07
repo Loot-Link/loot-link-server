@@ -1,6 +1,7 @@
 DROP TABLE IF EXISTS notifications;
 DROP TABLE IF EXISTS notification_types;
 DROP TABLE IF EXISTS game_platforms; -- Depends on games & platforms
+DROP TABLE IF EXISTS user_favorite_games; --Depends on users & games
 DROP TABLE IF EXISTS session_users; --Depends on sessions & users
 DROP TABLE IF EXISTS session_messages; --Depends on sessions & users
 DROP TABLE IF EXISTS sessions; -- Depends on users
@@ -47,6 +48,12 @@ CREATE TABLE users (
   date_of_birth DATE,
   gender TEXT,
   bio TEXT
+);
+
+CREATE TABLE user_favorite_games (
+    user_id INT REFERENCES users(user_id) ON DELETE CASCADE,
+    game_id INT REFERENCES games(game_id) ON DELETE CASCADE,
+    PRIMARY KEY (user_id, game_id)
 );
  
 CREATE TABLE friendships ( 

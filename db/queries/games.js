@@ -35,3 +35,13 @@ export async function updateGameImage(game_id, imageUrl) {
   const { rows: [game] } = await db.query(sql, [imageUrl, game_id]);
   return game;
 }
+
+export const getUserFavoriteGames = async (userId) => {
+  const query = `
+    SELECT g.* FROM games g
+    JOIN user_favorite_games ufg ON g.game_id = ufg.game_id
+    WHERE ufg.user_id = $1;
+  `;
+  const { rows } = await db.query(query, [userId]);
+  return rows;
+};
