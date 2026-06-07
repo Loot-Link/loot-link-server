@@ -7,7 +7,7 @@ import requireBody from "#middleware/requireBody";
 import { createToken } from "#utils/jwt";
 import { getUserById } from "#db/queries/users";
 import getUserFromToken from "#middleware/getUserFromToken";
-import { addFavoriteGame, getUserFavoriteGames } from "#db/queries/games";
+import { addFavoriteGame, checkFavorites, getUserFavoriteGames, removeFavorite } from "#db/queries/games";
 
 router.use(getUserFromToken);
 
@@ -138,12 +138,18 @@ router.post("/me", getUserFromToken, async (req, res) => {
 router.post("/:userId/favorites", getUserFromToken, async (req, res) => {
   try {
     const  userId  = req.user.user_id;
-    const { game_id } = req.body; 
-
+    const { game_id } = req.body;    
     if (!game_id) {
       return res.status(400).send({ error: "game_id is required" });
     }
-    const updatedFavorites = await addFavoriteGame(userId, game_id);
+    const checkQuery = await checkFavorites(userId, game_id);
+    if(checkQuery.length > 0) {
+      const unFavorited = await removeFavorite(userId, game_id);
+    }else{
+      const newFavorite = await addFavoriteGame(userId, game_id);
+    }
+    
+    const updatedFavorites = await getUserFavoriteGames(userId)
     res.status(200).send(updatedFavorites);
 
   } catch (error) {

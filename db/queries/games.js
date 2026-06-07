@@ -54,7 +54,23 @@ export const addFavoriteGame = async (userId, gameId) => {
     ON CONFLICT DO NOTHING;
   `;
   await db.query(sql, [userId, gameId]);
-
-  const updatedFavorites = await getUserFavoriteGames(userId);
-  return updatedFavorites;
 };
+
+export async function checkFavorites(userId, game_id){
+  const sql = `
+    SELECT * FROM user_favorite_games 
+     WHERE user_id = $1 AND game_id = $2;
+  `;
+  const { rows } = await db.query(sql, [userId, game_id]);
+  return rows;
+}
+
+export async function removeFavorite(userId, game_id) {
+  const sql = `
+    DELETE FROM user_favorite_games 
+    WHERE user_id = $1 AND game_id = $2
+    RETURNING *;
+  `;
+  const {rows} = await db.query(sql, [userId, game_id]);
+  return rows[0];
+}
