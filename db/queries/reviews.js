@@ -151,7 +151,6 @@ export async function updateGameReviewById(gameReviewId, userId, reviewTitle, ga
 
 // ===== Review Votes (thumbs up / thumbs down) =====
 export async function getReviewVotes(gameReviewId, userId = null) {
-  // Returns total score, upvote count, downvote count, and optional user's vote
   const votesSql = `
     SELECT
       SUM(vote_value) AS score,
