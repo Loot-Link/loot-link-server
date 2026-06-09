@@ -1,5 +1,5 @@
 import express from "express";
-import { createUser, getUserByEmailAndPassword, getUsers, getUserById } from "#db/queries/users";
+import { createUser, getUserByEmailAndPassword, getUsers, getUserById, updateUser } from "#db/queries/users";
 import requireBody from "#middleware/requireBody";
 import { createToken } from "#utils/jwt";
 import getUserFromToken from "#middleware/getUserFromToken";
@@ -100,7 +100,7 @@ router.use((req, res, next) => {
 router.get("/me", async (req, res) => {
   try {
     // Fetches your rich database row fields using your active token payload ID
-    const user = await getUserById(req.user.id);
+    const user = await getUserById(req.user.user_id);
     
     if (!user) {
       return res.status(404).send("User profile records not found.");
