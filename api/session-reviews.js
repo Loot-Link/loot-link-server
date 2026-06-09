@@ -1,7 +1,7 @@
 import express from 'express';
 import requireBody from '#middleware/requireBody';
 import requireUser from '#middleware/requireUser';
-import { createSessionReview, getSessionReviewsBySessionId, updateSessionReviewById } from '#db/queries/sessionReviews';
+import { createSessionReview, getSessionReviewsBySessionId, getSessionReviewBySessionAndUser, updateSessionReviewById, updateSessionReviewBySessionAndUser } from '#db/queries/sessionReviews';
 
 const sessionReviewsRouter = express.Router();
 
@@ -22,6 +22,25 @@ sessionReviewsRouter.post(
     } catch (err) {
       console.error('Session review insert failed:', err);
       res.status(500).send('Error saving session review');
+    }
+  }
+);
+
+sessionReviewsRouter.get(
+  '/:sessionId/user',
+  requireUser,
+  async (req, res) => {
+    try {
+      const { sessionId } = req.params;
+      const review = await getSessionReviewBySessionAndUser(
+        sessionId,
+        req.user.user_id
+      );
+
+      res.json(review);
+    } catch (err) {
+      console.error('Failed to fetch current user session review:', err);
+      res.status(500).send('Error fetching current session review');
     }
   }
 );
