@@ -3,6 +3,7 @@ DROP TABLE IF EXISTS notification_types;
 DROP TABLE IF EXISTS game_platforms; -- Depends on games & platforms
 DROP TABLE IF EXISTS session_users; --Depends on sessions & users
 DROP TABLE IF EXISTS session_messages; --Depends on sessions & users
+DROP TABLE IF EXISTS session_reviews; --Depends on sessions & users
 DROP TABLE IF EXISTS sessions; -- Depends on users
 DROP TABLE IF EXISTS friendships; --Depends on users
 DROP TABLE IF EXISTS review_votes; -- Depends on game_reviews & users
@@ -210,7 +211,16 @@ CREATE TABLE review_votes (
   UNIQUE (game_review_id, user_id)
 );
 
-
+CREATE TABLE session_reviews (
+  session_review_id SERIAL PRIMARY KEY,
+  session_id INT NOT NULL REFERENCES sessions(session_id) ON DELETE CASCADE,
+  user_id INT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+  session_rating INT NOT NULL CHECK (session_rating IN (1, 2, 3, 4, 5)),
+  member_ratings JSONB NOT NULL DEFAULT '[]'::jsonb,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  UNIQUE (session_id, user_id)
+);
 
 
 -- ************************ Notifications TABLES ************************ -- 

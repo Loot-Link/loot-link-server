@@ -12,7 +12,8 @@ import friendsListRouter from '#api/friendslist';
 import gamesRouter from "#api/games";
 import sessionsRouter from "#api/sessions";
 import sessionMessagesRouter from "#api/sessionmessages";
-import gameReviewsRouter from "#api/game-reviews";
+import gameReviewsRouter from "#api/reviews";
+import sessionReviewsRouter from "#api/session-reviews";
 
 import steamRouter from "#api/steam";
 import xboxRouter from "#api/xbox";
@@ -24,7 +25,6 @@ import notficationsRouter from "./api/notifications.js";
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-// app.use(morgan("dev")); // Disabled due to CommonJS/ESM compatibility issue
 app.use(cors());
 app.use(getUserFromToken); 
 app.use(cookieParser());
@@ -35,6 +35,7 @@ app.use("/api/games", gamesRouter);
 app.use("/api/sessions", sessionsRouter);
 app.use("/api/session-messages", sessionMessagesRouter);
 app.use("/api/game-reviews", gameReviewsRouter);
+app.use("/api/session-reviews", sessionReviewsRouter);
 
 app.use("/api/battlenet", battleNetRouter);
 app.use("/api/steam", steamRouter);
