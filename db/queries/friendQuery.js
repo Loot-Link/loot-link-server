@@ -133,6 +133,5 @@ export async function removeFromBlocklist(userId1, userId2, actorId) {
     RETURNING *;
     `;
     const { rows } = await db.query(sql, [userId1, userId2]);
-    console.log("Success if empty: ", rows[0]);
     return rows[0];
 }

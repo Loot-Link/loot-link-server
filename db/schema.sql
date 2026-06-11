@@ -1,6 +1,7 @@
 DROP TABLE IF EXISTS notifications;
 DROP TABLE IF EXISTS notification_types;
 DROP TABLE IF EXISTS game_platforms; -- Depends on games & platforms
+DROP TABLE IF EXISTS user_favorite_games; --Depends on users & games
 DROP TABLE IF EXISTS session_users; --Depends on sessions & users
 DROP TABLE IF EXISTS session_messages; --Depends on sessions & users
 DROP TABLE IF EXISTS session_reviews; --Depends on sessions & users
@@ -44,8 +45,13 @@ CREATE TABLE users (
   active BOOLEAN NOT NULL DEFAULT TRUE,
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW(),
-  avatar_url TEXT
+  avatar_url TEXT,
+  date_of_birth DATE,
+  gender TEXT,
+  bio TEXT
 );
+
+
  
 CREATE TABLE friendships ( 
   user_id_1 INTEGER REFERENCES users(user_id) ON DELETE CASCADE,
@@ -156,7 +162,12 @@ CREATE TABLE games (
   created_at TIMESTAMP NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
-
+--Moved to create after games table is created.
+CREATE TABLE user_favorite_games (
+    user_id INT REFERENCES users(user_id) ON DELETE CASCADE,
+    game_id INT REFERENCES games(game_id) ON DELETE CASCADE,
+    PRIMARY KEY (user_id, game_id)
+);
 CREATE TABLE platforms (
   platform_id SERIAL PRIMARY KEY,
   platform_name TEXT NOT NULL UNIQUE, -- steam, xbox, psn
