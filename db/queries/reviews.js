@@ -172,9 +172,9 @@ export async function getReviewVotes(gameReviewId, userId = null) {
   }
 
   return {
-    score: Number(totals.score || 0),
-    upvotes: Number(totals.upvotes || 0),
-    downvotes: Number(totals.downvotes || 0),
+    score: +(totals.score || 0),
+    upvotes: +(totals.upvotes || 0),
+    downvotes: +(totals.downvotes || 0),
     userVote,
   };
 }
