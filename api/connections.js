@@ -45,7 +45,8 @@ router.get("/xbox", async (req, res) => {
     `?state=${req.query.token}`;
   res.cookie("xbox_link_user_id", user.id, {
     httpOnly: true,
-    sameSite: "lax",
+    sameSite: "none",
+    secure: true,
   });
   res.redirect(xboxLoginURL);
 });
@@ -63,6 +64,7 @@ router.get("/xbox/callback", async (req, res) => {
     body: JSON.stringify({
       code,
       app_key: process.env.OPENXBL_PUBLIC_KEY,
+      client_secret: process.env.OPENXBL_CLIENT_SECRET,
     }),
   });
 
