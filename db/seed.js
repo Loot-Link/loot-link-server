@@ -140,7 +140,7 @@ async function seed() {
     INSERT INTO roles (role_id, role_name) VALUES
       (1, 'super_admin'),
       (10, 'admin'),
-      (100, 'user');
+      (100, 'user')
   `);
 
   //create admins

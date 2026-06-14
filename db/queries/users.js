@@ -37,6 +37,18 @@ export async function updateUser(id, data){
   return rows[0];
 }
 
+export async function updateLastSeen(userId) {
+  const sql = `
+    UPDATE users
+    SET last_seen_at = NOW()
+    WHERE user_id = $1
+    RETURNING *;
+  `;
+
+  const { rows: [user] } = await db.query(sql, [userId]);
+  return user;
+}
+
 export async function getUserByEmailAndPassword(email, password) {
   const sql = `
     SELECT * FROM users

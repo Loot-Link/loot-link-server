@@ -1,6 +1,7 @@
 DROP TABLE IF EXISTS notifications;
 DROP TABLE IF EXISTS notification_types;
 DROP TABLE IF EXISTS game_platforms; -- Depends on games & platforms
+DROP TABLE IF EXISTS raidhelper_events; --No current dependencies
 DROP TABLE IF EXISTS user_favorite_games; --Depends on users & games
 DROP TABLE IF EXISTS session_users; --Depends on sessions & users
 DROP TABLE IF EXISTS session_messages; --Depends on sessions & users
@@ -45,6 +46,7 @@ CREATE TABLE users (
   active BOOLEAN NOT NULL DEFAULT TRUE,
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW(),
+  last_seen_at TIMESTAMP DEFAULT NOW(),
   avatar_url TEXT,
   date_of_birth DATE,
   gender TEXT,
@@ -64,6 +66,33 @@ CREATE TABLE friendships (
   CONSTRAINT uid_order CHECK (user_id_1 < user_id_2)
 );
 
+-- ************************ Games TABLES ************************ -- 
+CREATE TABLE games (
+  game_id SERIAL PRIMARY KEY,
+  game_title TEXT NOT NULL,
+  slug TEXT UNIQUE NOT NULL,
+
+  game_description TEXT,
+  genre TEXT,
+  category TEXT,
+  age_rating TEXT,
+
+  release_date DATE,
+  developer TEXT,
+  publisher TEXT,
+
+  cover_image_url TEXT,
+  banner_image_url TEXT,
+
+  avg_rating NUMERIC,
+  rating_count INTEGER DEFAULT 0,
+
+  igdb_id INTEGER,
+  steam_app_id INTEGER,
+
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
 -- ************************ Sessions TABLES ************************ -- 
 CREATE TABLE sessions (
   session_id SERIAL PRIMARY KEY,
@@ -135,33 +164,6 @@ CREATE TABLE session_messages (
 
 
 
--- ************************ Games TABLES ************************ -- 
-CREATE TABLE games (
-  game_id SERIAL PRIMARY KEY,
-  game_title TEXT NOT NULL,
-  slug TEXT UNIQUE NOT NULL,
-
-  game_description TEXT,
-  genre TEXT,
-  category TEXT,
-  age_rating TEXT,
-
-  release_date DATE,
-  developer TEXT,
-  publisher TEXT,
-
-  cover_image_url TEXT,
-  banner_image_url TEXT,
-
-  avg_rating NUMERIC,
-  rating_count INTEGER DEFAULT 0,
-
-  igdb_id INTEGER,
-  steam_app_id INTEGER,
-
-  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMP NOT NULL DEFAULT NOW()
-);
 --Moved to create after games table is created.
 CREATE TABLE user_favorite_games (
     user_id INT REFERENCES users(user_id) ON DELETE CASCADE,
@@ -262,3 +264,33 @@ CREATE TABLE notifications (
   read_at TIMESTAMP
 );
 
+CREATE TABLE raidhelper_events (
+  raidhelper_event_id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+
+  event_id TEXT,
+  softres_id TEXT,
+  guild_id TEXT,
+  guild_name TEXT,
+  channel_id TEXT,
+
+  raid_name TEXT,
+  raid_notes TEXT,
+  raid_leader TEXT,
+
+
+  title TEXT,
+  start_time TIMESTAMP,
+  signup_count INTEGER,
+  signup_max INTEGER,
+
+  raidhelper_url TEXT,
+  softres_url TEXT,
+  raw_json JSONB,
+
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW(),
+
+  UNIQUE (user_id, event_id),
+  UNIQUE (user_id, softres_id)
+);
