@@ -1,10 +1,10 @@
 import express from "express";
-import { createUser, getUserByEmailAndPassword, getUsers, getUserById, updateUser } from "#db/queries/users";
+import { createUser, getUserByEmailAndPassword, getUsers, getUserById, updateUser, updateLastSeen } from "#db/queries/users";
 import requireBody from "#middleware/requireBody";
 import { createToken } from "#utils/jwt";
 import getUserFromToken from "#middleware/getUserFromToken";
 import { addFavoriteGame, checkFavorites, getUserFavoriteGames, removeFavorite } from "#db/queries/games";
-
+import requireUser from "#middleware/requireUser";
 
 // ✅ FIXED: Instantiated the router instance before any endpoints call it!
 const router = express.Router();
@@ -153,4 +153,10 @@ router.post("/:userId/favorites", getUserFromToken, async (req, res) => {
   }
 });
   
+//emj heartbeat
+router.post("/heartbeat", requireUser, async (req, res) => {
+  const user = await updateLastSeen(req.user.user_id);
+  res.send(user);
+});
+
 export default router;

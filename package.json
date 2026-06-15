@@ -5,10 +5,10 @@
     "#*": "./*.js"
   },
   "scripts": {
-    "start": "node --env-file=.env server.js",
+    "start": "node server.js",
     "dev": "node --watch --env-file=.env server.js",
     "test": "vitest",
-    "db:schema": "psql -d lootlink -f db/schema.sql",
+    "db:schema": "node --env-file=.env -e \"import('child_process').then(({execSync})=>execSync('psql -f db/schema.sql \\\"' + process.env.DATABASE_URL + '\\\"', {stdio:'inherit'}))\"",
     "db:seed": "node --env-file=.env db/seed.js",
     "db:reset": "npm run db:schema && npm run db:seed"
   },

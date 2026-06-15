@@ -24,6 +24,7 @@ import battleNetRouter from "#api/battlenet";
 import connectionsRouter from "./api/connections.js";
 import psnRouter from "./api/playstation.js";
 import notficationsRouter from "./api/notifications.js";
+import raidHelperRouter from "./api/raidhelper.js";
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -52,6 +53,7 @@ app.use("/api/xbox", xboxRouter);
 app.use("/api/connections", connectionsRouter);
 app.use("/api/playstation", psnRouter);
 app.use("/api/notifications", notficationsRouter);
+app.use("/api/raidhelper", raidHelperRouter);
 
 app.use((err, req, res, next) => {
   // A switch statement can be used instead of if statements
