@@ -6,14 +6,12 @@ export default app;
 import getUserFromToken from "#middleware/getUserFromToken";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-
-import usersRouter from "#api/users"; 
+import usersRouter from "#api/users";
 import friendsListRouter from '#api/friendslist';
 import gamesRouter from "#api/games";
 import sessionsRouter from "#api/sessions";
 import sessionMessagesRouter from "#api/sessionmessages";
 import gameReviewsRouter from "#api/game-reviews";
-
 import steamRouter from "#api/steam";
 import xboxRouter from "#api/xbox";
 import battleNetRouter from "#api/battlenet";
@@ -21,28 +19,29 @@ import connectionsRouter from "./api/connections.js";
 import psnRouter from "./api/playstation.js";
 import notficationsRouter from "./api/notifications.js";
 
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 // app.use(morgan("dev")); // Disabled due to CommonJS/ESM compatibility issue
 app.use(cors());
-app.use(getUserFromToken); 
-app.use(cookieParser());
+app.use(cookieParser()); // Moved up so tokens can be parsed before verification runs
 
+// Users router mounted before the global lock so login/register routes pass cleanly
 app.use("/api/users", usersRouter);
+
+// Global token authentication gateway intercepts downstream routes securely
+app.use(getUserFromToken);
+
 app.use("/api/friendslist", friendsListRouter);
 app.use("/api/games", gamesRouter);
 app.use("/api/sessions", sessionsRouter);
 app.use("/api/session-messages", sessionMessagesRouter);
 app.use("/api/game-reviews", gameReviewsRouter);
-
 app.use("/api/battlenet", battleNetRouter);
 app.use("/api/steam", steamRouter);
 app.use("/api/xbox", xboxRouter);
 app.use("/api/connections", connectionsRouter);
 app.use("/api/playstation", psnRouter);
 app.use("/api/notifications", notficationsRouter);
-
 
 app.use((err, req, res, next) => {
   // A switch statement can be used instead of if statements

@@ -56,6 +56,12 @@ CREATE TABLE friendships (
   CONSTRAINT pk_friendships PRIMARY KEY (user_id_1, user_id_2),
   CONSTRAINT uid_order CHECK (user_id_1 < user_id_2)
 );
+ALTER TABLE users 
+ADD COLUMN psn_username VARCHAR(50),
+ADD COLUMN psn_level VARCHAR(10) DEFAULT '1',
+ADD COLUMN psn_plats VARCHAR(10) DEFAULT '0',
+ADD COLUMN total_trophies VARCHAR(10) DEFAULT '0';
+
 
 -- ************************ Sessions TABLES ************************ -- 
 CREATE TABLE sessions (
