@@ -1,8 +1,10 @@
 import express from "express";
-import { createUser, getUserByEmailAndPassword, getUsers, getUserById } from "#db/queries/users";
+import { createUser, getUserByEmailAndPassword, getUsers, getUserById, updateUser } from "#db/queries/users";
 import requireBody from "#middleware/requireBody";
 import { createToken } from "#utils/jwt";
 import getUserFromToken from "#middleware/getUserFromToken";
+import { addFavoriteGame, checkFavorites, getUserFavoriteGames, removeFavorite } from "#db/queries/games";
+
 
 // ✅ FIXED: Instantiated the router instance before any endpoints call it!
 const router = express.Router();
@@ -86,7 +88,9 @@ router.use((req, res, next) => {
 // 5. GET Me - Dynamic profile state sync endpoint
 router.get("/me", async (req, res) => {
   try {
-    const user = await getUserById(req.user.id);
+    // Fetches your rich database row fields using your active token payload ID
+    const user = await getUserById(req.user.user_id);
+    
     if (!user) {
       return res.status(404).send("User profile records not found.");
     }
@@ -96,5 +100,57 @@ router.get("/me", async (req, res) => {
     res.status(500).send("Server profile synchronization failure");
   }
 });
+router.get("/:userId/favorites", async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const favorites = await getUserFavoriteGames(userId);
+    
+    res.send(favorites);
+  } catch (error) {
+    console.error("Error fetching favorites:", error);
+    res.status(500).send({ error: "Internal server error" });
+  }
+});
 
+router.post("/me", getUserFromToken, async (req, res) => {
+  try {
+    const userId = req.user.user_id;
+    const { date_of_birth, gender, bio } = req.body;
+
+    const updatedUser = await updateUser(userId, { date_of_birth, gender, bio });
+
+    console.log("API call: ", updatedUser);
+    
+    if (updatedUser) {
+      delete updatedUser.password;
+    }
+    res.status(200).send(updatedUser);
+  } catch (err) {
+    console.error(err);
+  }
+});
+
+router.post("/:userId/favorites", getUserFromToken, async (req, res) => {
+  try {
+    const  userId  = req.user.user_id;
+    const { game_id } = req.body;    
+    if (!game_id) {
+      return res.status(400).send({ error: "game_id is required" });
+    }
+    const checkQuery = await checkFavorites(userId, game_id);
+    if(checkQuery.length > 0) {
+      const unFavorited = await removeFavorite(userId, game_id);
+    }else{
+      const newFavorite = await addFavoriteGame(userId, game_id);
+    }
+    
+    const updatedFavorites = await getUserFavoriteGames(userId)
+    res.status(200).send(updatedFavorites);
+
+  } catch (error) {
+    console.error("Error adding favorite:", error);
+    res.status(500).send({ error: "Internal server error" });
+  }
+});
+  
 export default router;

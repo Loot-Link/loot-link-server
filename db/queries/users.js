@@ -22,6 +22,20 @@ export async function createUser(email, username, password, role_id = 100) {
   } = await db.query(sql, [email, username, hashedPassword, role_id]);
   return user;
 }
+export async function updateUser(id, data){
+  const sql = `
+  UPDATE users
+  SET 
+    date_of_birth = $1,
+    gender = $2,
+    bio = $3,
+    updated_at = NOW()
+  WHERE user_id = $4
+  RETURNING *;
+  `;
+  const {rows} = await db.query(sql, [data.date_of_birth || null, data.gender || null, data.bio || null, id]);
+  return rows[0];
+}
 
 export async function getUserByEmailAndPassword(email, password) {
   const sql = `

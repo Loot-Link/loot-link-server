@@ -11,7 +11,13 @@ import friendsListRouter from '#api/friendslist';
 import gamesRouter from "#api/games";
 import sessionsRouter from "#api/sessions";
 import sessionMessagesRouter from "#api/sessionmessages";
+<<<<<<< HEAD
 import gameReviewsRouter from "#api/game-reviews";
+=======
+import gameReviewsRouter from "#api/reviews";
+import sessionReviewsRouter from "#api/session-reviews";
+
+>>>>>>> main
 import steamRouter from "#api/steam";
 import xboxRouter from "#api/xbox";
 import battleNetRouter from "#api/battlenet";
@@ -21,7 +27,6 @@ import notficationsRouter from "./api/notifications.js";
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-// app.use(morgan("dev")); // Disabled due to CommonJS/ESM compatibility issue
 app.use(cors());
 app.use(cookieParser()); // Moved up so tokens can be parsed before verification runs
 
@@ -36,6 +41,11 @@ app.use("/api/games", gamesRouter);
 app.use("/api/sessions", sessionsRouter);
 app.use("/api/session-messages", sessionMessagesRouter);
 app.use("/api/game-reviews", gameReviewsRouter);
+<<<<<<< HEAD
+=======
+app.use("/api/session-reviews", sessionReviewsRouter);
+
+>>>>>>> main
 app.use("/api/battlenet", battleNetRouter);
 app.use("/api/steam", steamRouter);
 app.use("/api/xbox", xboxRouter);

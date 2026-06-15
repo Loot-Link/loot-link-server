@@ -17,16 +17,11 @@ import {
     deleteReviewVote
     } from '#db/queries/reviews';
 
-
-
-
-
 const gameReviewsRouter= express.Router();
 export default gameReviewsRouter;
 
 /* ====== Game Reviews ====== */
 
-// Register param handler FIRST
 gameReviewsRouter.param('id', async (req, res, next, game_review_id) => {
     const gameReview = await getGameReviewById(game_review_id);
     if (!gameReview) {
@@ -37,7 +32,6 @@ gameReviewsRouter.param('id', async (req, res, next, game_review_id) => {
     next();
 });
 
-// Then specific routes that use the param
 gameReviewsRouter.get('/:id/games', async (req, res) => {
     const game = await getGameReviewByGameId(req.gameReview.game_id);
     res.send(game);
@@ -52,8 +46,6 @@ gameReviewsRouter.get('/:id', async (req, res) => {
 // Public endpoint: get vote totals for a review (and user's vote if auth provided)
 gameReviewsRouter.get('/:id/votes', async (req, res, next) => {
     try {
-        // If token provided and requireUser middleware not used, user may be undefined
-        // We attempt to read user from req.user if middleware ran earlier; otherwise null
         const userId = req.user ? req.user.user_id : null;
         const votes = await getReviewVotes(req.params.id, userId);
         res.send(votes);
@@ -62,7 +54,7 @@ gameReviewsRouter.get('/:id/votes', async (req, res, next) => {
     }
 });
 
-// Then the list route (least specific)
+
 gameReviewsRouter.get('/', async (req, res) => {
     const gameReviews = await getGameReviews();
     res.send(gameReviews);
@@ -142,7 +134,6 @@ gameReviewsRouter.post('/', requireBody([
     }
 });
 
-// Upsert a vote for the current user (1 = thumbs up, -1 = thumbs down)
 gameReviewsRouter.post('/:id/vote', requireBody(['voteValue']), async (req, res, next) => {
     try {
         const userId = req.user.user_id;
@@ -170,10 +161,3 @@ gameReviewsRouter.delete('/:id/vote', async (req, res, next) => {
         next(err);
     }
 });
-
-
-
-// gameReviewsRouter.get('/myReviews', async (req, res) => {
-//     const myReviews = await getMyReview(req.user.id);
-//     res.send(myReviews);
-// });
