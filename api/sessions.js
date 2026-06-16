@@ -248,6 +248,18 @@ router.delete("/:sessionId/kick/:targetUserId", requireUser, async (req, res) =>
   }
 });
 
+// 8. DELETE Leave Session
+router.delete("/:sessionId/leave", requireUser, async (req, res) => {
+  try {
+    const removed = await removeUserFromSession(req.params.sessionId, req.user.user_id);
+    if (!removed) return res.status(404).send("You are not in this session");
+    res.send({ message: "Successfully left the session" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Error leaving session");
+  }
+});
+
 // 9. PUT Lobby settings configuration (Saves active toggle overrides)
 router.put("/:sessionId/settings", requireUser, requireBody(["max_users", "session_status"]), async (req, res) => {
   try {
