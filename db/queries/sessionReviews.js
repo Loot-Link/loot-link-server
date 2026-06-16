@@ -8,6 +8,11 @@ export async function createSessionReview({ session_id, user_id, session_rating,
       session_rating,
       member_ratings
     ) VALUES ($1, $2, $3, $4::jsonb)
+    ON CONFLICT (session_id, user_id)
+    DO UPDATE SET
+      session_rating = EXCLUDED.session_rating,
+      member_ratings = EXCLUDED.member_ratings,
+      updated_at = NOW()
     RETURNING *;
   `;
 
@@ -53,4 +58,40 @@ export async function updateSessionReviewById(sessionReviewId, userId, session_r
   ]);
 
   return updatedReview;
+}
+
+export async function updateSessionReviewBySessionAndUser(session_id, userId, session_rating, member_ratings) {
+  const sql = `
+    UPDATE session_reviews
+    SET session_rating = $1,
+        member_ratings = $2::jsonb,
+        updated_at = NOW()
+    WHERE session_id = $3
+      AND user_id = $4
+    RETURNING *;
+  `;
+
+  const {
+    rows: [updatedReview],
+  } = await db.query(sql, [
+    session_rating,
+    JSON.stringify(member_ratings),
+    session_id,
+    userId,
+  ]);
+
+  return updatedReview;
+}
+
+export async function getSessionReviewBySessionAndUser(session_id, userId) {
+  const sql = `
+    SELECT *
+    FROM session_reviews
+    WHERE session_id = $1
+      AND user_id = $2
+    LIMIT 1;
+  `;
+
+  const { rows: [review] } = await db.query(sql, [session_id, userId]);
+  return review || null;
 }
