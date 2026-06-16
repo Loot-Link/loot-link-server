@@ -64,7 +64,7 @@ export async function upsertRaidHelperEvent(userId, raid) {
 }
 
 
-export async function getRaidHelperEventsByUserId(userId) {
+export async function getRaidHelperEventsByUserId() {
   const { rows } = await db.query(
     `
     SELECT *
