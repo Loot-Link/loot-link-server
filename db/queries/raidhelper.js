@@ -69,7 +69,6 @@ export async function getRaidHelperEventsByUserId(userId) {
     `
     SELECT *
     FROM raidhelper_events
-    WHERE user_id = $1
     ORDER BY start_time ASC
     `,
     [userId]
