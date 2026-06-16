@@ -70,8 +70,7 @@ export async function getRaidHelperEventsByUserId() {
     SELECT *
     FROM raidhelper_events
     ORDER BY start_time ASC
-    `,
-    [userId]
+    `
   );
 
   return rows;
