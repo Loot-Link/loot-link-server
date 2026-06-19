@@ -22,6 +22,16 @@ export async function getGamesForImageURL(){
   return games;
 }
 
+export async function getGameById(game_id) {
+  const sql = `
+    SELECT *
+    FROM games
+    WHERE game_id = $1
+  `;
+
+  const { rows } = await db.query(sql, [game_id]);
+  return rows[0];
+}
 
 
 export async function updateGameImage(game_id, imageUrl) {
