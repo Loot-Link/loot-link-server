@@ -45,7 +45,7 @@ router.post("/import",  async (req, res, next) => {
 
 router.get("/imported",  async (req, res, next) => {
   try {
-    console.log("Logged in user:", req.user.user_id);
+    // console.log("Logged in user:", req.user.user_id);
     const raids = await getRaidHelperEventsByUserId();
     console.log("Raids found:", raids.length);
     res.send(raids);
